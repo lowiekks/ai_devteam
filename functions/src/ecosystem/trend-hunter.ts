@@ -6,7 +6,7 @@
 
 import * as functions from "firebase-functions";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import axios from "axios";
+// import axios from "axios"; // TODO: Uncomment when integrating real TikTok API
 import OpenAI from "openai";
 import { config } from "../config/environment";
 import { TrendData } from "../../../shared/types/blog";

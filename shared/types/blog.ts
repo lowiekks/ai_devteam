@@ -3,7 +3,9 @@
  * For programmatic SEO and content marketing
  */
 
-import { Timestamp } from "firebase-admin/firestore";
+// Timestamp type alias for Firebase Admin
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Timestamp = any;
 
 export type BlogPostStatus = "draft" | "published" | "archived";
 

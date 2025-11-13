@@ -3,7 +3,9 @@
  * Defines the plugin system for monetization and feature upsells
  */
 
-import { Timestamp } from "firebase-admin/firestore";
+// Timestamp type alias for Firebase Admin
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Timestamp = any;
 
 export type PluginCategory =
   | "automation"

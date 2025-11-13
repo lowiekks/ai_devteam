@@ -8,7 +8,7 @@ import * as functions from "firebase-functions";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import OpenAI from "openai";
 import { config } from "../config/environment";
-import { Product, ContentStatus } from "../../../shared/types/database";
+import { Product } from "../../../shared/types/database";
 
 const openai = new OpenAI({
   apiKey: config.openai.apiKey,

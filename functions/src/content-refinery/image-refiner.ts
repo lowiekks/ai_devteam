@@ -175,8 +175,9 @@ async function removeBackground(imageUrl: string): Promise<string> {
 
 /**
  * Upscale image using Real-ESRGAN (optional - costs more)
+ * Currently unused but available for future use
  */
-async function upscaleImage(imageUrl: string): Promise<string> {
+export async function upscaleImage(imageUrl: string): Promise<string> {
   const replicateApiKey = process.env.REPLICATE_API_TOKEN;
 
   if (!replicateApiKey) {
