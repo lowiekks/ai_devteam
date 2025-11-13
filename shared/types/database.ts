@@ -27,6 +27,11 @@ export interface UserSettings {
   max_price_variance: number; // Percentage
   notification_email?: string;
   notification_webhooks?: string[];
+
+  // Content Refinery Settings
+  auto_refine_text: boolean;        // Auto-run GPT-4o on imports
+  auto_refine_images: boolean;      // Auto-process images (costs more)
+  require_manual_review: boolean;   // Force REVIEW before LIVE
 }
 
 export interface User {
@@ -42,6 +47,39 @@ export interface User {
 // ==================== PRODUCT TYPES ====================
 
 export type ProductStatus = "ACTIVE" | "REMOVED" | "OUT_OF_STOCK" | "PRICE_CHANGED";
+
+// Content Refinery Status
+export type ContentStatus =
+  | "RAW_IMPORT"      // Just imported from supplier
+  | "PROCESSING"      // AI is refining content
+  | "REVIEW"          // Ready for human approval
+  | "LIVE"            // Published and active
+  | "REJECTED";       // Failed review
+
+export interface ContentFlags {
+  text_refined: boolean;
+  images_refined: boolean;
+  auto_refine_images: boolean; // User setting per product
+}
+
+export interface PublicData {
+  // Refined content (post-AI processing)
+  title: string;
+  short_description: string;  // The "hook" - 2 sentence compelling copy
+  features: string[];          // Bullet points of key benefits
+  images: string[];            // Processed, clean product images
+  original_title?: string;     // Keep for comparison
+  original_description?: string;
+  original_images?: string[];
+}
+
+export interface SocialMedia {
+  instagram_caption?: string;
+  facebook_post?: string;
+  twitter_post?: string;
+  generated_at?: Timestamp;
+  posted: boolean;
+}
 
 export interface MonitoredSupplier {
   url: string;
@@ -84,11 +122,21 @@ export interface Product {
   platform_id: string; // ID in Shopify/WooCommerce
   name: string;
   original_image_url: string;
+
+  // Content Refinery Fields
+  content_status: ContentStatus;
+  content_flags: ContentFlags;
+  public_data: PublicData;
+  social_media?: SocialMedia;
+
+  // Monitoring Fields
   monitored_supplier: MonitoredSupplier;
   ai_insights: AIInsights;
   automation_log: AutomationLogEntry[];
+
   created_at: Timestamp;
   updated_at: Timestamp;
+  published_at?: Timestamp;  // When moved to LIVE
 }
 
 // ==================== SCRAPING TYPES ====================
