@@ -1,0 +1,52 @@
+rules_version = '2';
+
+// Cloud Storage Security Rules for Dropshipping Monitor
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns the resource
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Product images - organized by user
+    match /products/{userId}/{allPaths=**} {
+      // Allow read if authenticated
+      allow read: if isAuthenticated();
+
+      // Allow write only if user owns the path
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Refined images from AI Content Refinery
+    match /refined/{userId}/{allPaths=**} {
+      // Allow read if authenticated
+      allow read: if isAuthenticated();
+
+      // Allow write by authenticated users (for their own content)
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Temporary uploads
+    match /temp/{userId}/{allPaths=**} {
+      // Allow read/write for 1 hour
+      allow read, write: if isAuthenticated()
+                          && isOwner(userId)
+                          && request.time < resource.metadata.uploadTime + duration.value(1, 'h');
+    }
+
+    // Public assets (logos, templates, etc.)
+    match /public/{allPaths=**} {
+      // Anyone can read
+      allow read: if true;
+
+      // Only authenticated users can write
+      allow write: if isAuthenticated();
+    }
+  }
+}

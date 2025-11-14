@@ -1,5 +1,10 @@
-{
-  "projects": {
-    "default": "yaico-i-38970353-4df67"
-  }
-}
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDfNfZCgHcpPAAohFIy6-bmQYY0dY7kzfo",
+  authDomain: "yaico-i-38970353-4df67.firebaseapp.com",
+  projectId: "yaico-i-38970353-4df67",
+  storageBucket: "yaico-i-38970353-4df67.firebasestorage.app",
+  messagingSenderId: "1005455001415",
+  appId: "1:1005455001415:web:9a7ab073d86193d7eeae62"
+};
+

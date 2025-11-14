@@ -14,21 +14,16 @@ function getShopifyClient(platform: ShopifyPlatform) {
   const shopify = shopifyApi({
     apiKey: process.env.SHOPIFY_API_KEY || "",
     apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
-    scopes: ["read_products", "write_products"],
-    hostName: platform.shop_url,
+    scopes: ["read_products", "write_products", "read_inventory", "write_inventory"],
+    hostName: platform.shop_url.replace(".myshopify.com", ""),
     apiVersion: LATEST_API_VERSION,
     isEmbeddedApp: false,
   });
 
-  const session = {
-    id: `offline_${platform.shop_url}`,
-    shop: platform.shop_url,
-    state: "offline",
-    isOnline: false,
-    accessToken: platform.access_token,
-  };
+  const session = shopify.session.customAppSession(platform.shop_url);
+  session.accessToken = platform.access_token;
 
-  return new shopify.clients.Rest({ session: session as any });
+  return new shopify.clients.Rest({ session });
 }
 
 /**
