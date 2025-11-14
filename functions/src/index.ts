@@ -40,3 +40,6 @@ export { getMonitoredProducts } from "./api/products";
 export { addProductToMonitoring } from "./api/products";
 export { getUserSettings, updateUserSettings } from "./api/settings";
 export { getAnalytics } from "./api/analytics";
+
+// Product Import Pipeline (Step 1)
+export { importProduct, getRawProducts, deleteRawProduct } from "./api/product-import";

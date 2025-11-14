@@ -1,0 +1,262 @@
+<div class="import-layout">
+  <app-sidebar />
+
+  <div class="import-content">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1>📥 Product Import</h1>
+        <p>Import products from AliExpress for AI enhancement</p>
+      </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (importSuccess()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ importSuccess() }}</span>
+        <button (click)="importSuccess.set(null)" class="close-btn">✕</button>
+      </div>
+    }
+
+    @if (importError()) {
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <span>{{ importError() }}</span>
+        <button (click)="importError.set(null)" class="close-btn">✕</button>
+      </div>
+    }
+
+    <!-- Import Form -->
+    <div class="import-card">
+      <div class="card-header">
+        <h2>🔗 Import New Product</h2>
+        <p>Paste an AliExpress product URL to begin the AI enhancement pipeline</p>
+      </div>
+
+      <div class="import-form">
+        <div class="url-input-group">
+          <input
+            type="text"
+            class="url-input"
+            placeholder="https://www.aliexpress.com/item/1234567890.html"
+            [(ngModel)]="productUrl"
+            (keyup.enter)="importProduct()"
+            [disabled]="importing()"
+          />
+          <button
+            class="btn-import"
+            (click)="importProduct()"
+            [disabled]="importing() || !productUrl()"
+          >
+            @if (importing()) {
+              <span class="spinner-small"></span>
+              Importing...
+            } @else {
+              <span class="import-icon">📥</span>
+              Import Product
+            }
+          </button>
+        </div>
+
+        <div class="import-info">
+          <div class="info-item">
+            <span class="info-icon">ℹ️</span>
+            <span>Product data will be fetched from AliExpress API</span>
+          </div>
+          <div class="info-item">
+            <span class="info-icon">🤖</span>
+            <span>AI will automatically enhance titles, descriptions, and images</span>
+          </div>
+          <div class="info-item">
+            <span class="info-icon">✨</span>
+            <span>Review and publish enhanced products to your store</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().totalImported }}</div>
+          <div class="stat-label">Total Imported</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().pendingProcessing }}</div>
+          <div class="stat-label">Processing</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().completed }}</div>
+          <div class="stat-label">Ready</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().failed }}</div>
+          <div class="stat-label">Failed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Imported Products List -->
+    <div class="products-section">
+      <div class="section-header">
+        <h2>📋 Imported Products</h2>
+        <button class="btn-refresh" (click)="loadRawProducts()" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner-small"></span>
+          } @else {
+            🔄
+          }
+          Refresh
+        </button>
+      </div>
+
+      @if (loading() && rawProducts().length === 0) {
+        <div class="loading-state">
+          <span class="spinner-large"></span>
+          <p>Loading imported products...</p>
+        </div>
+      } @else if (rawProducts().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📦</div>
+          <h3>No Products Imported Yet</h3>
+          <p>Start by pasting an AliExpress product URL above</p>
+        </div>
+      } @else {
+        <div class="products-grid">
+          @for (product of rawProducts(); track product.raw_product_id) {
+            <div class="product-card" [class]="getStatusBadgeClass(product.import_status)">
+              <div class="product-image">
+                @if (product.raw_data.images && product.raw_data.images.length > 0) {
+                  <img [src]="product.raw_data.images[0]" [alt]="product.raw_data.title" />
+                } @else {
+                  <div class="no-image">📷</div>
+                }
+                <span class="status-badge" [class]="getStatusBadgeClass(product.import_status)">
+                  {{ getStatusLabel(product.import_status) }}
+                </span>
+              </div>
+
+              <div class="product-info">
+                <h3 class="product-title">{{ product.raw_data.title || 'Untitled Product' }}</h3>
+                <div class="product-meta">
+                  <span class="meta-item">
+                    💰 ${{ product.raw_data.price.min }} - ${{ product.raw_data.price.max }}
+                  </span>
+                  <span class="meta-item">
+                    ⭐ {{ product.raw_data.rating || 0 }}/5
+                  </span>
+                  <span class="meta-item">
+                    🛒 {{ product.raw_data.orders || 0 }} orders
+                  </span>
+                </div>
+                <div class="product-date">
+                  Imported: {{ formatDate(product.created_at) }}
+                </div>
+
+                @if (product.import_status === 'failed' && product.processing.error_message) {
+                  <div class="error-message">
+                    ⚠️ {{ product.processing.error_message }}
+                  </div>
+                }
+              </div>
+
+              <div class="product-actions">
+                <button class="btn-view" (click)="viewDetails(product)">
+                  👁️ View Details
+                </button>
+                <button class="btn-delete" (click)="deleteProduct(product.raw_product_id)">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Product Details Modal -->
+    @if (selectedProduct()) {
+      <div class="modal-overlay" (click)="closeDetails()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>📦 Product Details</h2>
+            <button class="modal-close" (click)="closeDetails()">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="detail-section">
+              <h3>Basic Information</h3>
+              <div class="detail-row">
+                <span class="detail-label">Product ID:</span>
+                <span class="detail-value">{{ selectedProduct()!.raw_data.product_id }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Title:</span>
+                <span class="detail-value">{{ selectedProduct()!.raw_data.title }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Category:</span>
+                <span class="detail-value">{{ selectedProduct()!.raw_data.category || 'N/A' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Source URL:</span>
+                <a [href]="selectedProduct()!.source_url" target="_blank" class="detail-link">
+                  View on AliExpress →
+                </a>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>Pricing & Stats</h3>
+              <div class="detail-row">
+                <span class="detail-label">Price Range:</span>
+                <span class="detail-value">
+                  ${{ selectedProduct()!.raw_data.price.min }} - ${{ selectedProduct()!.raw_data.price.max }}
+                  {{ selectedProduct()!.raw_data.price.currency }}
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Rating:</span>
+                <span class="detail-value">⭐ {{ selectedProduct()!.raw_data.rating || 0 }}/5</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Total Orders:</span>
+                <span class="detail-value">{{ selectedProduct()!.raw_data.orders || 0 }}</span>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>Images ({{ selectedProduct()!.raw_data.images.length }})</h3>
+              <div class="images-grid">
+                @for (image of selectedProduct()!.raw_data.images.slice(0, 6); track image) {
+                  <img [src]="image" [alt]="selectedProduct()!.raw_data.title" class="detail-image" />
+                }
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>Description</h3>
+              <div class="detail-description" [innerHTML]="selectedProduct()!.raw_data.description || 'No description available'"></div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeDetails()">Close</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

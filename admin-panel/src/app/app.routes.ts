@@ -11,6 +11,7 @@ import { Analytics } from './pages/analytics/analytics';
 import { Settings } from './pages/settings/settings';
 import { ActivityLogs } from './pages/activity-logs/activity-logs';
 import { Integrations } from './pages/integrations/integrations';
+import { Import } from './pages/import/import';
 
 // Auth guard function
 const authGuard = () => {
@@ -81,6 +82,11 @@ export const routes: Routes = [
     path: 'integrations',
     component: Integrations,
     canActivate: [authGuard, permissionGuard('canChangeSettings')]
+  },
+  {
+    path: 'import',
+    component: Import,
+    canActivate: [authGuard]
   },
   {
     path: '**',

@@ -19,9 +19,17 @@ export interface WooCommercePlatform {
   consumer_secret: string;
 }
 
+export interface AliExpressPlatform {
+  appKey: string;
+  appSecret: string;
+  trackingId?: string;
+  apiEndpoint?: string;
+}
+
 export interface UserPlatforms {
   shopify?: ShopifyPlatform;
   woocommerce?: WooCommercePlatform;
+  aliexpress?: AliExpressPlatform;
 }
 
 export interface UserSettings {

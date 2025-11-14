@@ -263,8 +263,23 @@ export class Integrations implements OnInit {
           lastSync: new Date(),
         });
 
-        // Save config
+        // Save config to localStorage
         localStorage.setItem('aliexpress_config', JSON.stringify(cfg));
+
+        // IMPORTANT: Save config to Firestore for Cloud Functions access
+        const userId = this.authService.getUid();
+        if (userId) {
+          await this.firestoreService.updateUser(userId, {
+            platforms: {
+              aliexpress: {
+                appKey: cfg.appKey,
+                appSecret: cfg.appSecret,
+                trackingId: cfg.trackingId || '',
+                apiEndpoint: 'https://api-sg.aliexpress.com/sync',
+              },
+            },
+          } as any);
+        }
 
         // Log activity
         await this.firestoreService.logActivity(
