@@ -53,3 +53,6 @@ export {
   deleteEnhancedProduct,
   markAsPublished,
 } from "./api/enhanced-products";
+
+// Product Publishing (Step 4)
+export { publishProduct, unpublishProduct, getPublishStatus } from "./publishers/publish-product";

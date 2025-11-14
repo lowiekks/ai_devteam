@@ -71,6 +71,11 @@ export class Review implements OnInit {
   isEditing = signal(false);
   editedProduct = signal<any>(null);
 
+  // Publishing state
+  showPublishModal = signal(false);
+  publishing = signal(false);
+  publishPlatform = signal<'shopify' | 'woocommerce' | null>(null);
+
   // Stats
   stats = signal({
     total: 0,
@@ -228,5 +233,72 @@ export class Review implements OnInit {
 
   getStatusLabel(status: string): string {
     return status.charAt(0) + status.slice(1).toLowerCase();
+  }
+
+  // Publishing methods
+  openPublishModal() {
+    this.showPublishModal.set(true);
+    this.publishPlatform.set(null);
+  }
+
+  closePublishModal() {
+    this.showPublishModal.set(false);
+    this.publishPlatform.set(null);
+  }
+
+  async publishToStore(platform: 'shopify' | 'woocommerce') {
+    const product = this.selectedProduct();
+    if (!product) return;
+
+    this.publishing.set(true);
+    this.error.set(null);
+
+    try {
+      const publishFn = httpsCallable<
+        any,
+        {
+          success: boolean;
+          message: string;
+          productId?: string;
+          productUrl?: string;
+          platform: string;
+        }
+      >(this.functions, 'publishProduct');
+
+      const result = await publishFn({
+        enhancedProductId: product.enhanced_product_id,
+        platform,
+      });
+
+      if (result.data.success) {
+        this.successMessage.set(
+          `Product published to ${platform} successfully! Product ID: ${result.data.productId}`
+        );
+        setTimeout(() => this.successMessage.set(null), 5000);
+
+        // Reload products to update status
+        await this.loadEnhancedProducts();
+        this.closePublishModal();
+        this.closeReview();
+      }
+    } catch (error: any) {
+      console.error('Error publishing product:', error);
+
+      let errorMessage = 'Failed to publish product';
+
+      if (error.message) {
+        if (error.message.includes('not configured')) {
+          errorMessage = `Please connect ${platform} first in Integrations`;
+        } else if (error.message.includes('already published')) {
+          errorMessage = 'Product already published';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      this.error.set(errorMessage);
+    } finally {
+      this.publishing.set(false);
+    }
   }
 }

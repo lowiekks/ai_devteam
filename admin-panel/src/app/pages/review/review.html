@@ -224,8 +224,87 @@
             } @else {
               <button class="btn-secondary" (click)="closeReview()">Close</button>
               <button class="btn-edit" (click)="startEditing()">✏️ Edit</button>
-              <button class="btn-primary">🚀 Publish to Store</button>
+              @if (selectedProduct()!.status === 'READY') {
+                <button class="btn-primary" (click)="openPublishModal()">🚀 Publish to Store</button>
+              } @else if (selectedProduct()!.status === 'PUBLISHED') {
+                <button class="btn-success" disabled>✓ Published</button>
+              }
             }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Publish Platform Selection Modal -->
+    @if (showPublishModal()) {
+      <div class="modal-overlay" (click)="closePublishModal()">
+        <div class="modal-content publish-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>🚀 Publish Product</h2>
+            <button class="modal-close" (click)="closePublishModal()">✕</button>
+          </div>
+
+          <div class="modal-body">
+            <p class="publish-intro">Choose where to publish your product:</p>
+
+            <div class="platform-selection">
+              <button
+                class="platform-card"
+                [class.selected]="publishPlatform() === 'shopify'"
+                (click)="publishPlatform.set('shopify')"
+                [disabled]="publishing()"
+              >
+                <div class="platform-icon">🛍️</div>
+                <h3>Shopify</h3>
+                <p>Publish to your Shopify store</p>
+              </button>
+
+              <button
+                class="platform-card"
+                [class.selected]="publishPlatform() === 'woocommerce'"
+                (click)="publishPlatform.set('woocommerce')"
+                [disabled]="publishing()"
+              >
+                <div class="platform-icon">🛒</div>
+                <h3>WooCommerce</h3>
+                <p>Publish to your WooCommerce store</p>
+              </button>
+            </div>
+
+            @if (publishPlatform()) {
+              <div class="publish-info">
+                <div class="info-item">
+                  <span class="info-icon">✨</span>
+                  <span>AI-enhanced content will be published</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">📸</span>
+                  <span>All processed images will be included</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">💰</span>
+                  <span>Pricing will be set automatically</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closePublishModal()" [disabled]="publishing()">
+              Cancel
+            </button>
+            <button
+              class="btn-primary"
+              [disabled]="!publishPlatform() || publishing()"
+              (click)="publishToStore(publishPlatform()!)"
+            >
+              @if (publishing()) {
+                <span class="spinner-small"></span>
+                Publishing...
+              } @else {
+                Confirm & Publish
+              }
+            </button>
           </div>
         </div>
       </div>
