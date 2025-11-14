@@ -1,4 +1,7 @@
-import { Timestamp } from "firebase-admin/firestore";
+// Type alias for Firebase Timestamp
+// In functions code, this will be firebase-admin/firestore Timestamp
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Timestamp = any;
 
 // ==================== USER TYPES ====================
 

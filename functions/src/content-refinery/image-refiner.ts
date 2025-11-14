@@ -175,7 +175,9 @@ async function removeBackground(imageUrl: string): Promise<string> {
 
 /**
  * Upscale image using Real-ESRGAN (optional - costs more)
+ * Currently not used to save costs, but available if needed
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function upscaleImage(imageUrl: string): Promise<string> {
   const replicateApiKey = process.env.REPLICATE_API_TOKEN;
 

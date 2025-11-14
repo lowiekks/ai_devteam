@@ -6,7 +6,7 @@
 import * as functions from "firebase-functions";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { scrapeProductUrl } from "../scraping/scraper";
-import { ScrapeTaskPayload, Product, AutomationAction } from "../../../shared/types/database";
+import { ScrapeTaskPayload, Product } from "../../../shared/types/database";
 import { handleProductRemoval } from "../ai-healing/auto-heal";
 import { handlePriceChange } from "./price-handler";
 

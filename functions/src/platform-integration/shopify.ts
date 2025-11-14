@@ -3,15 +3,27 @@
  * Handles all Shopify API operations
  */
 
-import { Shopify } from "@shopify/shopify-api";
+import "@shopify/shopify-api/adapters/node";
+import { shopifyApi, LATEST_API_VERSION } from "@shopify/shopify-api";
 import { ShopifyPlatform } from "../../../shared/types/database";
 
 /**
  * Initialize Shopify REST client
  */
 function getShopifyClient(platform: ShopifyPlatform) {
-  const shopify = new Shopify.Clients.Rest(platform.shop_url, platform.access_token);
-  return shopify;
+  const shopify = shopifyApi({
+    apiKey: process.env.SHOPIFY_API_KEY || "",
+    apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
+    scopes: ["read_products", "write_products", "read_inventory", "write_inventory"],
+    hostName: platform.shop_url.replace(".myshopify.com", ""),
+    apiVersion: LATEST_API_VERSION,
+    isEmbeddedApp: false,
+  });
+
+  const session = shopify.session.customAppSession(platform.shop_url);
+  session.accessToken = platform.access_token;
+
+  return new shopify.clients.Rest({ session });
 }
 
 /**
