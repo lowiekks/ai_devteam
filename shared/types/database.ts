@@ -43,6 +43,9 @@ export interface User {
   plan: PlanType;
   platforms: UserPlatforms;
   settings: UserSettings;
+  active_plugins: string[];  // Plugin IDs user has installed
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
   created_at: Timestamp;
   updated_at: Timestamp;
 }

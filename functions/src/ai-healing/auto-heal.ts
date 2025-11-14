@@ -8,6 +8,7 @@ import { reverseImageSearch } from "./image-search";
 import { vetSupplierWithAI } from "./ai-vetting";
 import { updatePlatformStock } from "../platform-integration/platform-controller";
 import { sendNotificationEmail } from "../utils/notifications";
+import { hasPlugin } from "../ecosystem/plugin-marketplace";
 import { Product, User, SupplierCandidate, AutomationLogEntry } from "../../../shared/types/database";
 
 /**
@@ -46,7 +47,16 @@ export async function handleProductRemoval(productId: string, userId: string): P
     // Update platform stock to prevent sales
     await updatePlatformStock(product.platform, product.platform_id, user.platforms, 0);
 
-    // Step 2: Check if auto-replace is enabled
+    // Step 2: Check if user has Auto-Healer plugin installed
+    const hasAutoHealerPlugin = await hasPlugin(userId, "auto_healer");
+
+    if (!hasAutoHealerPlugin) {
+      console.log(`Auto-Healer plugin not installed for user ${userId}`);
+      await sendAlertEmail(product, user, "Auto-Healer plugin required for automatic replacement");
+      return;
+    }
+
+    // Step 3: Check if auto-replace is enabled in settings
     if (!user.settings.auto_replace) {
       console.log(`Auto-replace disabled for user ${userId}, sending alert email`);
       await sendAlertEmail(product, user);
