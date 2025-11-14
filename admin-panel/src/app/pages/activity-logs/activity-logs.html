@@ -1,0 +1,255 @@
+<div class="logs-layout">
+  <app-sidebar />
+
+  <div class="logs-content">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1>📋 Activity Logs</h1>
+        <p>Track and monitor all administrative actions across the system</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-action btn-export" (click)="exportToCSV()">
+          📥 Export CSV
+        </button>
+        <button class="btn-action btn-clear" (click)="clearOldLogs()">
+          🗑️ Clear Old Logs
+        </button>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="success-close">
+          ✕
+        </button>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <span>{{ error() }}</span>
+        <button (click)="error.set(null)" class="error-close">✕</button>
+      </div>
+    }
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ logs().length }}</div>
+          <div class="stat-label">Total Logs</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">➕</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ actionStats().create }}</div>
+          <div class="stat-label">Creates</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✏️</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ actionStats().update }}</div>
+          <div class="stat-label">Updates</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🗑️</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ actionStats().delete }}</div>
+          <div class="stat-label">Deletes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="search-bar">
+        <input
+          type="text"
+          placeholder="Search by description, admin, or entity name..."
+          [value]="searchQuery()"
+          (input)="onSearchChange($any($event.target).value)"
+          class="search-input"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Action:</label>
+        <select
+          [value]="filterAction()"
+          (change)="setFilterAction($any($event.target).value)"
+          class="filter-select"
+        >
+          <option value="all">All Actions</option>
+          <option value="create">Create</option>
+          <option value="update">Update</option>
+          <option value="delete">Delete</option>
+          <option value="login">Login</option>
+          <option value="export">Export</option>
+          <option value="settings_change">Settings Change</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Entity Type:</label>
+        <select
+          [value]="filterEntityType()"
+          (change)="setFilterEntityType($any($event.target).value)"
+          class="filter-select"
+        >
+          <option value="all">All Types</option>
+          <option value="user">User</option>
+          <option value="product">Product</option>
+          <option value="settings">Settings</option>
+          <option value="system">System</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    @if (selectedLogs().size > 0) {
+      <div class="bulk-actions">
+        <span>{{ selectedLogs().size }} log(s) selected</span>
+        <button class="btn-bulk btn-delete" (click)="deleteSelected()">
+          🗑️ Delete Selected
+        </button>
+        <button class="btn-bulk btn-cancel" (click)="deselectAllLogs()">
+          Cancel
+        </button>
+      </div>
+    }
+
+    <!-- Logs Table -->
+    <div class="logs-card">
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading activity logs...</p>
+        </div>
+      } @else if (paginatedLogs().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <h3>No Activity Logs</h3>
+          <p>
+            {{
+              searchQuery() || filterAction() !== 'all' || filterEntityType() !== 'all'
+                ? 'No logs match your current filters'
+                : 'Activity logs will appear here as actions are performed'
+            }}
+          </p>
+        </div>
+      } @else {
+        <div class="logs-table-wrapper">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th class="checkbox-col">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedLogs().size === paginatedLogs().length"
+                    (change)="
+                      selectedLogs().size === paginatedLogs().length
+                        ? deselectAllLogs()
+                        : selectAllLogs()
+                    "
+                  />
+                </th>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Entity</th>
+                <th>Description</th>
+                <th>Admin</th>
+                <th>IP Address</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (log of paginatedLogs(); track log.id) {
+                <tr [class.selected]="selectedLogs().has(log.id)">
+                  <td class="checkbox-col">
+                    <input
+                      type="checkbox"
+                      [checked]="selectedLogs().has(log.id)"
+                      (change)="toggleLogSelection(log.id)"
+                    />
+                  </td>
+                  <td class="time-col">
+                    <div class="time-display">
+                      <span class="time-ago">{{ getTimeAgo(log.timestamp) }}</span>
+                      <span class="time-full">{{ formatTimestamp(log.timestamp) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      class="action-badge"
+                      [ngClass]="getActionColor(log.action)"
+                    >
+                      <span class="action-icon">{{ getActionIcon(log.action) }}</span>
+                      {{ log.action }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="entity-info">
+                      <span class="entity-type">{{ log.entityType }}</span>
+                      @if (log.entityName) {
+                        <span class="entity-name">{{ log.entityName }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="description-col">{{ log.description }}</td>
+                  <td class="admin-col">
+                    <div class="admin-info">
+                      <span class="admin-email">{{ log.adminEmail }}</span>
+                    </div>
+                  </td>
+                  <td class="ip-col">{{ log.ipAddress || 'N/A' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button
+              class="pagination-btn"
+              (click)="previousPage()"
+              [disabled]="currentPage() === 1"
+            >
+              ← Previous
+            </button>
+
+            <div class="pagination-pages">
+              @for (page of [].constructor(totalPages()); track $index) {
+                <button
+                  class="pagination-number"
+                  [class.active]="currentPage() === $index + 1"
+                  (click)="goToPage($index + 1)"
+                >
+                  {{ $index + 1 }}
+                </button>
+              }
+            </div>
+
+            <button
+              class="pagination-btn"
+              (click)="nextPage()"
+              [disabled]="currentPage() === totalPages()"
+            >
+              Next →
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

@@ -58,6 +58,20 @@ export interface Analytics {
   activeStores: number;
 }
 
+export interface ActivityLog {
+  id: string;
+  action: 'create' | 'update' | 'delete' | 'login' | 'export' | 'settings_change';
+  entityType: 'user' | 'product' | 'settings' | 'system';
+  entityId?: string;
+  entityName?: string;
+  adminEmail: string;
+  adminId?: string;
+  description: string;
+  metadata?: Record<string, any>;
+  timestamp: Timestamp;
+  ipAddress?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -68,11 +82,13 @@ export class FirestoreService {
   usersLoading = signal(false);
   productsLoading = signal(false);
   analyticsLoading = signal(false);
+  activityLogsLoading = signal(false);
 
   // Error states
   usersError = signal<string | null>(null);
   productsError = signal<string | null>(null);
   analyticsError = signal<string | null>(null);
+  activityLogsError = signal<string | null>(null);
 
   // ==================== Users ====================
 
@@ -283,6 +299,105 @@ export class FirestoreService {
       };
     } finally {
       this.analyticsLoading.set(false);
+    }
+  }
+
+  // ==================== Activity Logs ====================
+
+  getActivityLogs(constraints: QueryConstraint[] = []): Observable<ActivityLog[]> {
+    this.activityLogsLoading.set(true);
+    this.activityLogsError.set(null);
+
+    try {
+      const logsCollection = collection(this.firestore, 'activity_logs');
+      const defaultConstraints = [orderBy('timestamp', 'desc'), limit(100)];
+      const q = query(logsCollection, ...defaultConstraints, ...constraints);
+      return collectionData(q, { idField: 'id' }) as Observable<ActivityLog[]>;
+    } catch (error: any) {
+      this.activityLogsError.set(error.message || 'Failed to fetch activity logs');
+      throw error;
+    } finally {
+      this.activityLogsLoading.set(false);
+    }
+  }
+
+  async logActivity(
+    action: ActivityLog['action'],
+    entityType: ActivityLog['entityType'],
+    description: string,
+    options?: {
+      entityId?: string;
+      entityName?: string;
+      adminEmail?: string;
+      adminId?: string;
+      metadata?: Record<string, any>;
+      ipAddress?: string;
+    }
+  ): Promise<string> {
+    try {
+      const logsCollection = collection(this.firestore, 'activity_logs');
+      const logEntry: Omit<ActivityLog, 'id'> = {
+        action,
+        entityType,
+        description,
+        adminEmail: options?.adminEmail || 'admin@dropshipmonitor.com',
+        adminId: options?.adminId,
+        entityId: options?.entityId,
+        entityName: options?.entityName,
+        metadata: options?.metadata,
+        timestamp: Timestamp.now(),
+        ipAddress: options?.ipAddress,
+      };
+      const docRef = await addDoc(logsCollection, logEntry);
+      return docRef.id;
+    } catch (error: any) {
+      console.error('Failed to log activity:', error);
+      // Don't throw - logging failure shouldn't break the app
+      return '';
+    }
+  }
+
+  async deleteActivityLog(logId: string): Promise<void> {
+    this.activityLogsLoading.set(true);
+    this.activityLogsError.set(null);
+
+    try {
+      const logDoc = doc(this.firestore, `activity_logs/${logId}`);
+      await deleteDoc(logDoc);
+    } catch (error: any) {
+      this.activityLogsError.set(error.message || 'Failed to delete activity log');
+      throw error;
+    } finally {
+      this.activityLogsLoading.set(false);
+    }
+  }
+
+  async clearOldActivityLogs(daysOld: number = 90): Promise<number> {
+    this.activityLogsLoading.set(true);
+    this.activityLogsError.set(null);
+
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+      const cutoffTimestamp = Timestamp.fromDate(cutoffDate);
+
+      const logsCollection = collection(this.firestore, 'activity_logs');
+      const q = query(logsCollection, where('timestamp', '<', cutoffTimestamp));
+      const snapshot = await getDocs(q);
+
+      let deletedCount = 0;
+      const deletePromises = snapshot.docs.map((docSnapshot) => {
+        deletedCount++;
+        return deleteDoc(docSnapshot.ref);
+      });
+
+      await Promise.all(deletePromises);
+      return deletedCount;
+    } catch (error: any) {
+      this.activityLogsError.set(error.message || 'Failed to clear old activity logs');
+      throw error;
+    } finally {
+      this.activityLogsLoading.set(false);
     }
   }
 }

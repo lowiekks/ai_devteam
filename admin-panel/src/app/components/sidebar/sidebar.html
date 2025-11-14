@@ -22,7 +22,11 @@
       <div class="user-avatar">{{ (authService.getUserEmail() || 'A')[0].toUpperCase() }}</div>
       <div class="user-details">
         <div class="user-email">{{ authService.getUserEmail() }}</div>
-        <div class="user-role">Administrator</div>
+        <div class="user-role">
+          <span class="role-badge" [class]="'role-' + authService.getRole()">
+            {{ authService.getRole() | titlecase }}
+          </span>
+        </div>
       </div>
     </div>
     <button class="logout-btn" (click)="logout()">

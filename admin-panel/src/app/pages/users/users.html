@@ -9,12 +9,16 @@
         <p>Manage user accounts, roles, and permissions</p>
       </div>
       <div class="header-actions">
-        <button class="btn-action btn-export" (click)="exportToCSV()">
-          📥 Export CSV
-        </button>
-        <button class="btn-action btn-create" (click)="openCreateModal()">
-          ➕ Create User
-        </button>
+        @if (authService.hasPermission('canExportData')) {
+          <button class="btn-action btn-export" (click)="exportToCSV()">
+            📥 Export CSV
+          </button>
+        }
+        @if (authService.hasPermission('canCreateUsers')) {
+          <button class="btn-action btn-create" (click)="openCreateModal()">
+            ➕ Create User
+          </button>
+        }
       </div>
     </div>
 
@@ -37,24 +41,28 @@
     }
 
     <!-- Bulk Actions Toolbar -->
-    @if (selectedUserIds().size > 0) {
+    @if (selectedUserIds().size > 0 && (authService.hasPermission('canEditUsers') || authService.hasPermission('canDeleteUsers'))) {
       <div class="bulk-actions-toolbar">
         <div class="bulk-info">
           <span>{{ selectedUserIds().size }} selected</span>
         </div>
         <div class="bulk-actions">
-          <button class="bulk-btn" (click)="bulkUpdateStatus('active')">
-            Set Active
-          </button>
-          <button class="bulk-btn" (click)="bulkUpdateStatus('inactive')">
-            Set Inactive
-          </button>
-          <button class="bulk-btn" (click)="bulkUpdateStatus('suspended')">
-            Suspend
-          </button>
-          <button class="bulk-btn bulk-btn-danger" (click)="bulkDelete()">
-            🗑️ Delete Selected
-          </button>
+          @if (authService.hasPermission('canEditUsers')) {
+            <button class="bulk-btn" (click)="bulkUpdateStatus('active')">
+              Set Active
+            </button>
+            <button class="bulk-btn" (click)="bulkUpdateStatus('inactive')">
+              Set Inactive
+            </button>
+            <button class="bulk-btn" (click)="bulkUpdateStatus('suspended')">
+              Suspend
+            </button>
+          }
+          @if (authService.hasPermission('canDeleteUsers')) {
+            <button class="bulk-btn bulk-btn-danger" (click)="bulkDelete()">
+              🗑️ Delete Selected
+            </button>
+          }
         </div>
       </div>
     }
@@ -174,12 +182,16 @@
                     <button class="btn-icon btn-view" (click)="viewUser(user)" title="View">
                       👁️
                     </button>
-                    <button class="btn-icon btn-edit" (click)="editUser(user)" title="Edit">
-                      ✏️
-                    </button>
-                    <button class="btn-icon btn-delete" (click)="deleteUser(user.id)" title="Delete">
-                      🗑️
-                    </button>
+                    @if (authService.hasPermission('canEditUsers')) {
+                      <button class="btn-icon btn-edit" (click)="editUser(user)" title="Edit">
+                        ✏️
+                      </button>
+                    }
+                    @if (authService.hasPermission('canDeleteUsers')) {
+                      <button class="btn-icon btn-delete" (click)="deleteUser(user.id)" title="Delete">
+                        🗑️
+                      </button>
+                    }
                   </div>
                 </td>
               </tr>

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../components/sidebar/sidebar';
 import { FirestoreService, User } from '../../services/firestore.service';
+import { AuthService } from '../../services/auth.service';
+import { SearchService } from '../../services/search.service';
 import { orderBy, limit, where } from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 
@@ -15,6 +17,8 @@ import { Subscription } from 'rxjs';
 })
 export class Users implements OnInit, OnDestroy {
   firestoreService = inject(FirestoreService);
+  authService = inject(AuthService);
+  searchService = inject(SearchService);
 
   users = signal<User[]>([]);
   filteredUsers = signal<User[]>([]);
@@ -74,14 +78,22 @@ export class Users implements OnInit, OnDestroy {
   applyFilters() {
     let filtered = this.users();
 
-    // Search filter
+    // Advanced search filter using SearchService
     if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
-      filtered = filtered.filter(
-        (user) =>
-          user.email.toLowerCase().includes(query) ||
-          user.displayName?.toLowerCase().includes(query)
+      filtered = this.searchService.fuzzySearch(
+        filtered,
+        this.searchQuery(),
+        ['email', 'displayName', 'role', 'shopifyUrl', 'woocommerceUrl'] as (keyof User)[]
       );
+
+      // Track search in history
+      if (this.searchQuery().length >= 3) {
+        this.searchService.addToHistory(
+          this.searchQuery(),
+          filtered.length,
+          'users'
+        );
+      }
     }
 
     // Status filter

@@ -8,6 +8,7 @@ import { Users } from './pages/users/users';
 import { Products } from './pages/products/products';
 import { Analytics } from './pages/analytics/analytics';
 import { Settings } from './pages/settings/settings';
+import { ActivityLogs } from './pages/activity-logs/activity-logs';
 
 // Auth guard function
 const authGuard = () => {
@@ -67,6 +68,11 @@ export const routes: Routes = [
   {
     path: 'settings',
     component: Settings,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'activity-logs',
+    component: ActivityLogs,
     canActivate: [authGuard]
   },
   {
