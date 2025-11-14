@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
 import { Navigation } from '@/components/Navigation'
 
-const inter = Inter({ subsets: ['latin'] })
+// Use system fonts as fallback for offline builds
+const fontClass = 'font-sans'
 
 export const metadata: Metadata = {
   title: 'Dropship Monitor - Enterprise Dashboard',
