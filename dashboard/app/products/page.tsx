@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { auth, functions } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -50,36 +51,7 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        await loadProducts();
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    let filtered = products;
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter((p) =>
-        p.public_data.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((p) => p.content_status === statusFilter);
-    }
-
-    setFilteredProducts(filtered);
-  }, [searchQuery, statusFilter, products]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       const getMonitoredProducts = httpsCallable(functions, 'getMonitoredProducts');
@@ -98,7 +70,36 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        await loadProducts();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [loadProducts]);
+
+  useEffect(() => {
+    let filtered = products;
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter((p) =>
+        p.public_data.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((p) => p.content_status === statusFilter);
+    }
+
+    setFilteredProducts(filtered);
+  }, [searchQuery, statusFilter, products]);
 
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -231,10 +232,12 @@ export default function ProductsPage() {
                 {/* Image */}
                 {product.public_data.images && product.public_data.images[0] && (
                   <div className="relative aspect-video bg-gray-900 overflow-hidden">
-                    <img
+                    <Image
                       src={product.public_data.images[0]}
                       alt={product.public_data.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                     <Badge
                       variant={
@@ -244,7 +247,7 @@ export default function ProductsPage() {
                           ? 'warning'
                           : 'default'
                       }
-                      className="absolute top-2 right-2"
+                      className="absolute top-2 right-2 z-10"
                     >
                       {product.content_status}
                     </Badge>
