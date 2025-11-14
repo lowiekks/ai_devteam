@@ -1,0 +1,237 @@
+<div class="integrations-layout">
+  <app-sidebar />
+
+  <div class="integrations-content">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1>🔗 API Integrations</h1>
+        <p>Connect your stores and product sources</p>
+      </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="close-btn">✕</button>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <span>{{ error() }}</span>
+        <button (click)="error.set(null)" class="close-btn">✕</button>
+      </div>
+    }
+
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().totalProducts }}</div>
+          <div class="stat-label">Total Products</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🛒</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().totalOrders }}</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-info">
+          <div class="stat-value">${{ stats().totalRevenue.toFixed(2) }}</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Cards -->
+    <div class="platforms-grid">
+      @for (platform of platformKeys; track platform) {
+        <div class="platform-card" [class.connected]="platforms()[platform].connected">
+          <div class="platform-header">
+            <div class="platform-icon">{{ platforms()[platform].icon }}</div>
+            <h3>{{ platforms()[platform].name }}</h3>
+            <div class="platform-status">
+              @if (platforms()[platform].connected) {
+                <span class="status-badge status-connected">Connected</span>
+              } @else {
+                <span class="status-badge status-disconnected">Disconnected</span>
+              }
+            </div>
+          </div>
+
+          <div class="platform-body">
+            @if (platforms()[platform].connected) {
+              <p class="last-sync">
+                Last synced: {{ formatLastSync(platforms()[platform].lastSync) }}
+              </p>
+            } @else {
+              <p class="connection-prompt">Connect your {{ platforms()[platform].name }} store</p>
+            }
+
+            @if (platforms()[platform].error) {
+              <div class="platform-error">
+                ⚠️ {{ platforms()[platform].error }}
+              </div>
+            }
+          </div>
+
+          <div class="platform-footer">
+            @if (platforms()[platform].connected) {
+              <button class="btn-secondary" (click)="disconnect(platform)">
+                Disconnect
+              </button>
+            } @else {
+              <button
+                class="btn-primary"
+                (click)="selectPlatform(platform)"
+                [disabled]="platforms()[platform].loading"
+              >
+                @if (platforms()[platform].loading) {
+                  <span class="spinner-small"></span>
+                  Connecting...
+                } @else {
+                  Connect
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Configuration Modal - WooCommerce -->
+    @if (selectedPlatform() === 'woocommerce') {
+      <div class="modal-overlay" (click)="closePlatformModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>🛒 Connect WooCommerce</h2>
+            <button class="modal-close" (click)="closePlatformModal()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Store URL</label>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="https://yourstore.com"
+                [(ngModel)]="woocommerceConfig().siteUrl"
+              />
+            </div>
+            <div class="form-group">
+              <label>Consumer Key</label>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="ck_..."
+                [(ngModel)]="woocommerceConfig().consumerKey"
+              />
+            </div>
+            <div class="form-group">
+              <label>Consumer Secret</label>
+              <input
+                type="password"
+                class="form-input"
+                placeholder="cs_..."
+                [(ngModel)]="woocommerceConfig().consumerSecret"
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closePlatformModal()">Cancel</button>
+            <button class="btn-primary" (click)="connectWooCommerce()">Connect</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Configuration Modal - Shopify -->
+    @if (selectedPlatform() === 'shopify') {
+      <div class="modal-overlay" (click)="closePlatformModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>🛍️ Connect Shopify</h2>
+            <button class="modal-close" (click)="closePlatformModal()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Shop Domain</label>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="yourstore.myshopify.com"
+                [(ngModel)]="shopifyConfig().shopDomain"
+              />
+            </div>
+            <div class="form-group">
+              <label>Admin API Access Token</label>
+              <input
+                type="password"
+                class="form-input"
+                placeholder="shpat_..."
+                [(ngModel)]="shopifyConfig().accessToken"
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closePlatformModal()">Cancel</button>
+            <button class="btn-primary" (click)="connectShopify()">Connect</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Configuration Modal - AliExpress -->
+    @if (selectedPlatform() === 'aliexpress') {
+      <div class="modal-overlay" (click)="closePlatformModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>📦 Connect AliExpress</h2>
+            <button class="modal-close" (click)="closePlatformModal()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>App Key</label>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="Your App Key"
+                [(ngModel)]="aliexpressConfig().appKey"
+              />
+            </div>
+            <div class="form-group">
+              <label>App Secret</label>
+              <input
+                type="password"
+                class="form-input"
+                placeholder="Your App Secret"
+                [(ngModel)]="aliexpressConfig().appSecret"
+              />
+            </div>
+            <div class="form-group">
+              <label>Tracking ID (Optional)</label>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="For affiliate tracking"
+                [(ngModel)]="aliexpressConfig().trackingId"
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closePlatformModal()">Cancel</button>
+            <button class="btn-primary" (click)="connectAliExpress()">Connect</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

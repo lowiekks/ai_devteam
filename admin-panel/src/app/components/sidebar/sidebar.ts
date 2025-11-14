@@ -23,6 +23,7 @@ export class Sidebar {
     { label: 'Users', icon: '👥', route: '/users' },
     { label: 'Products', icon: '📦', route: '/products' },
     { label: 'Analytics', icon: '📈', route: '/analytics' },
+    { label: 'Integrations', icon: '🔌', route: '/integrations' },
     { label: 'Activity Logs', icon: '📋', route: '/activity-logs' },
     { label: 'Settings', icon: '⚙️', route: '/settings' },
   ];
