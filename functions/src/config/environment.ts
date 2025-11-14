@@ -45,6 +45,11 @@ export const config = {
     fromEmail: "alerts@yourdomain.com",
   },
 
+  // Replicate API (for image processing)
+  replicate: {
+    apiToken: process.env.REPLICATE_API_TOKEN || "",
+  },
+
   // Feature flags
   features: {
     autoHealEnabled: true,
