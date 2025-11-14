@@ -136,7 +136,7 @@ export const refineProductImages = functions
  * Remove background from image using Replicate (rembg model)
  */
 async function removeBackground(imageUrl: string): Promise<string> {
-  const replicateApiKey = process.env.REPLICATE_API_TOKEN || config.scraping.apify.apiKey; // Fallback
+  const replicateApiKey = config.replicate.apiToken;
 
   if (!replicateApiKey) {
     console.warn("REPLICATE_API_TOKEN not set, skipping background removal");
@@ -177,7 +177,7 @@ async function removeBackground(imageUrl: string): Promise<string> {
  * Upscale image using Real-ESRGAN (optional - costs more)
  */
 async function upscaleImage(imageUrl: string): Promise<string> {
-  const replicateApiKey = process.env.REPLICATE_API_TOKEN;
+  const replicateApiKey = config.replicate.apiToken;
 
   if (!replicateApiKey) {
     return imageUrl;
