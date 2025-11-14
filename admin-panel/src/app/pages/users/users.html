@@ -1,0 +1,343 @@
+<div class="users-layout">
+  <app-sidebar />
+
+  <main class="users-content">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1>👥 Users Management</h1>
+        <p>Manage user accounts, roles, and permissions</p>
+      </div>
+      <div class="header-actions">
+        @if (authService.hasPermission('canExportData')) {
+          <button class="btn-action btn-export" (click)="exportToCSV()">
+            📥 Export CSV
+          </button>
+        }
+        @if (authService.hasPermission('canCreateUsers')) {
+          <button class="btn-action btn-create" (click)="openCreateModal()">
+            ➕ Create User
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="success-close">✕</button>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <span>{{ error() }}</span>
+        <button (click)="error.set(null)" class="error-close">✕</button>
+      </div>
+    }
+
+    <!-- Bulk Actions Toolbar -->
+    @if (selectedUserIds().size > 0 && (authService.hasPermission('canEditUsers') || authService.hasPermission('canDeleteUsers'))) {
+      <div class="bulk-actions-toolbar">
+        <div class="bulk-info">
+          <span>{{ selectedUserIds().size }} selected</span>
+        </div>
+        <div class="bulk-actions">
+          @if (authService.hasPermission('canEditUsers')) {
+            <button class="bulk-btn" (click)="bulkUpdateStatus('active')">
+              Set Active
+            </button>
+            <button class="bulk-btn" (click)="bulkUpdateStatus('inactive')">
+              Set Inactive
+            </button>
+            <button class="bulk-btn" (click)="bulkUpdateStatus('suspended')">
+              Suspend
+            </button>
+          }
+          @if (authService.hasPermission('canDeleteUsers')) {
+            <button class="bulk-btn bulk-btn-danger" (click)="bulkDelete()">
+              🗑️ Delete Selected
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Search users by email or name..."
+          [value]="searchQuery()"
+          (input)="onSearchChange($event)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <select [value]="statusFilter()" (change)="onStatusFilterChange($event)">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="suspended">Suspended</option>
+        </select>
+
+        <select [value]="roleFilter()" (change)="onRoleFilterChange($event)">
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading users...</p>
+      </div>
+    }
+
+    <!-- Users Table -->
+    @if (!loading() && filteredUsers().length > 0) {
+      <div class="table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th class="checkbox-cell">
+                <input
+                  type="checkbox"
+                  [checked]="selectAll()"
+                  (change)="toggleSelectAll()"
+                  class="checkbox"
+                />
+              </th>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Store</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsers(); track user.id) {
+              <tr [class.selected]="selectedUserIds().has(user.id)">
+                <td class="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedUserIds().has(user.id)"
+                    (change)="toggleUserSelection(user.id)"
+                    class="checkbox"
+                  />
+                </td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">
+                      {{ (user.displayName || user.email)[0].toUpperCase() }}
+                    </div>
+                    <div class="user-info">
+                      <div class="user-name">{{ user.displayName || 'N/A' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="user-email">{{ user.email }}</span>
+                </td>
+                <td>
+                  <span class="badge" [class]="getRoleBadgeClass(user.role)">
+                    {{ user.role }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [class]="getStatusBadgeClass(user.status)">
+                    {{ user.status }}
+                  </span>
+                </td>
+                <td>
+                  @if (user.shopifyUrl || user.woocommerceUrl) {
+                    <span class="store-badge">
+                      @if (user.shopifyUrl) {
+                        <span>🛍️ Shopify</span>
+                      }
+                      @if (user.woocommerceUrl) {
+                        <span>🛒 WooCommerce</span>
+                      }
+                    </span>
+                  } @else {
+                    <span class="text-muted">No store</span>
+                  }
+                </td>
+                <td>
+                  <span class="text-muted">{{ formatDate(user.createdAt) }}</span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn-icon btn-view" (click)="viewUser(user)" title="View">
+                      👁️
+                    </button>
+                    @if (authService.hasPermission('canEditUsers')) {
+                      <button class="btn-icon btn-edit" (click)="editUser(user)" title="Edit">
+                        ✏️
+                      </button>
+                    }
+                    @if (authService.hasPermission('canDeleteUsers')) {
+                      <button class="btn-icon btn-delete" (click)="deleteUser(user.id)" title="Delete">
+                        🗑️
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && filteredUsers().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h3>No users found</h3>
+        <p>Try adjusting your filters or search query</p>
+      </div>
+    }
+  </main>
+</div>
+
+<!-- User Detail/Edit/Create Modal -->
+@if (isModalOpen()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          @if (isCreating()) {
+            ➕ Create New User
+          } @else if (isEditing()) {
+            ✏️ Edit User
+          } @else {
+            👁️ User Details
+          }
+        </h2>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+
+      @if (selectedUser()) {
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Email *</label>
+            <input
+              type="email"
+              [(ngModel)]="selectedUser()!.email"
+              [disabled]="!isCreating()"
+              class="form-input"
+              placeholder="user@example.com"
+              [required]="true"
+            />
+            @if (isCreating()) {
+              <small class="form-hint">User will receive an email invitation</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Display Name</label>
+            <input
+              type="text"
+              [(ngModel)]="selectedUser()!.displayName"
+              [disabled]="!isEditing() && !isCreating()"
+              class="form-input"
+              placeholder="Enter display name"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Role</label>
+              <select
+                [(ngModel)]="selectedUser()!.role"
+                [disabled]="!isEditing() && !isCreating()"
+                class="form-select"
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Status</label>
+              <select
+                [(ngModel)]="selectedUser()!.status"
+                [disabled]="!isEditing() && !isCreating()"
+                class="form-select"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Shopify Store URL</label>
+            <input
+              type="url"
+              [(ngModel)]="selectedUser()!.shopifyUrl"
+              [disabled]="!isEditing() && !isCreating()"
+              class="form-input"
+              placeholder="https://your-store.myshopify.com"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>WooCommerce Store URL</label>
+            <input
+              type="url"
+              [(ngModel)]="selectedUser()!.woocommerceUrl"
+              [disabled]="!isEditing() && !isCreating()"
+              class="form-input"
+              placeholder="https://your-store.com"
+            />
+          </div>
+
+          @if (!isCreating()) {
+            <div class="form-group">
+              <label>Joined Date</label>
+              <input
+                type="text"
+                [value]="formatDate(selectedUser()!.createdAt)"
+                [disabled]="true"
+                class="form-input"
+              />
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          @if (isEditing() || isCreating()) {
+            <button class="btn btn-primary" (click)="saveUser()">
+              @if (isCreating()) {
+                ➕ Create User
+              } @else {
+                💾 Save Changes
+              }
+            </button>
+            <button class="btn btn-secondary" (click)="closeModal()">
+              Cancel
+            </button>
+          } @else {
+            <button class="btn btn-primary" (click)="closeModal()">
+              Close
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

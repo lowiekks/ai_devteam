@@ -125,7 +125,7 @@ export default function ViralStoreOnboarding() {
                 What type of store do you want?
               </h2>
               <p className="text-gray-400 text-lg">
-                We'll find trending products in your chosen category
+                We&apos;ll find trending products in your chosen category
               </p>
             </div>
 
@@ -231,7 +231,7 @@ export default function ViralStoreOnboarding() {
               <div className="text-left">
                 <div className="text-sm text-gray-400 mb-2">Tagline</div>
                 <div className="text-lg text-gray-300 italic mb-4">
-                  "{buildResult.branding?.tagline}"
+                  &quot;{buildResult.branding?.tagline}&quot;
                 </div>
 
                 <div className="text-sm text-gray-400 mb-2">Description</div>

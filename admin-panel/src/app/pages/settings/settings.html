@@ -1,0 +1,335 @@
+<div class="settings-layout">
+  <app-sidebar />
+
+  <main class="settings-content">
+    <div class="page-header">
+      <h1>⚙️ Settings</h1>
+      <p>Configure your admin panel settings and preferences</p>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="success-close">✕</button>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <span>{{ errorMessage() }}</span>
+        <button (click)="errorMessage.set(null)" class="error-close">✕</button>
+      </div>
+    }
+
+    <!-- Settings Tabs -->
+    <div class="settings-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'general'"
+        (click)="setActiveTab('general')"
+      >
+        🏠 General
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'firebase'"
+        (click)="setActiveTab('firebase')"
+      >
+        🔥 Firebase
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'email'"
+        (click)="setActiveTab('email')"
+      >
+        📧 Email
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'notifications'"
+        (click)="setActiveTab('notifications')"
+      >
+        🔔 Notifications
+      </button>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="settings-card">
+      <!-- General Tab -->
+      @if (activeTab() === 'general') {
+        <div class="tab-content">
+          <h2>General Settings</h2>
+          <p class="tab-description">Configure basic application settings</p>
+
+          <div class="form-group">
+            <label>Site Name</label>
+            <input
+              type="text"
+              [(ngModel)]="settings().general.siteName"
+              class="form-input"
+              placeholder="Enter site name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Admin Email</label>
+            <input
+              type="email"
+              [(ngModel)]="settings().general.adminEmail"
+              class="form-input"
+              placeholder="admin@example.com"
+            />
+            <small class="form-hint">Primary email for admin notifications</small>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="settings().general.maintenanceMode"
+                class="checkbox"
+              />
+              <span>Maintenance Mode</span>
+            </label>
+            <small class="form-hint">Enable to temporarily disable user access</small>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="settings().general.debug"
+                class="checkbox"
+              />
+              <span>Debug Mode</span>
+            </label>
+            <small class="form-hint">Enable detailed error logging</small>
+          </div>
+        </div>
+      }
+
+      <!-- Firebase Tab -->
+      @if (activeTab() === 'firebase') {
+        <div class="tab-content">
+          <h2>Firebase Configuration</h2>
+          <p class="tab-description">Firebase project settings (read-only)</p>
+
+          <div class="form-group">
+            <label>API Key</label>
+            <input
+              type="text"
+              [value]="settings().firebase.apiKey"
+              class="form-input"
+              disabled
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Auth Domain</label>
+            <input
+              type="text"
+              [value]="settings().firebase.authDomain"
+              class="form-input"
+              disabled
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Project ID</label>
+            <input
+              type="text"
+              [value]="settings().firebase.projectId"
+              class="form-input"
+              disabled
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Storage Bucket</label>
+            <input
+              type="text"
+              [value]="settings().firebase.storageBucket"
+              class="form-input"
+              disabled
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Messaging Sender ID</label>
+              <input
+                type="text"
+                [value]="settings().firebase.messagingSenderId"
+                class="form-input"
+                disabled
+              />
+            </div>
+
+            <div class="form-group">
+              <label>App ID</label>
+              <input
+                type="text"
+                [value]="settings().firebase.appId"
+                class="form-input"
+                disabled
+              />
+            </div>
+          </div>
+
+          <div class="info-box">
+            <span class="info-icon">ℹ️</span>
+            <p>Firebase configuration is managed in environment files and cannot be changed here.</p>
+          </div>
+        </div>
+      }
+
+      <!-- Email Tab -->
+      @if (activeTab() === 'email') {
+        <div class="tab-content">
+          <h2>Email Configuration</h2>
+          <p class="tab-description">Configure SMTP settings for email notifications</p>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="settings().email.enabled"
+                class="checkbox"
+              />
+              <span>Enable Email Notifications</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label>SMTP Host</label>
+            <input
+              type="text"
+              [(ngModel)]="settings().email.smtpHost"
+              class="form-input"
+              placeholder="smtp.example.com"
+              [disabled]="!settings().email.enabled"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>SMTP Port</label>
+            <input
+              type="text"
+              [(ngModel)]="settings().email.smtpPort"
+              class="form-input"
+              placeholder="587"
+              [disabled]="!settings().email.enabled"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>SMTP Username</label>
+            <input
+              type="text"
+              [(ngModel)]="settings().email.smtpUser"
+              class="form-input"
+              placeholder="user@example.com"
+              [disabled]="!settings().email.enabled"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>SMTP Password</label>
+            <input
+              type="password"
+              [(ngModel)]="settings().email.smtpPassword"
+              class="form-input"
+              placeholder="••••••••"
+              [disabled]="!settings().email.enabled"
+            />
+            <small class="form-hint">Password is encrypted before storage</small>
+          </div>
+        </div>
+      }
+
+      <!-- Notifications Tab -->
+      @if (activeTab() === 'notifications') {
+        <div class="tab-content">
+          <h2>Notification Preferences</h2>
+          <p class="tab-description">Choose which notifications you want to receive</p>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="settings().notifications.enabled"
+                class="checkbox"
+              />
+              <span>Enable All Notifications</span>
+            </label>
+            <small class="form-hint">Master switch for all notification types</small>
+          </div>
+
+          <div class="notifications-list">
+            <div class="notification-item">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="settings().notifications.newUserSignup"
+                  class="checkbox"
+                  [disabled]="!settings().notifications.enabled"
+                />
+                <div class="notification-info">
+                  <span class="notification-title">New User Signups</span>
+                  <small>Get notified when a new user creates an account</small>
+                </div>
+              </label>
+            </div>
+
+            <div class="notification-item">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="settings().notifications.productPriceChange"
+                  class="checkbox"
+                  [disabled]="!settings().notifications.enabled"
+                />
+                <div class="notification-info">
+                  <span class="notification-title">Product Price Changes</span>
+                  <small>Alert when monitored product prices change significantly</small>
+                </div>
+              </label>
+            </div>
+
+            <div class="notification-item">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="settings().notifications.errorAlerts"
+                  class="checkbox"
+                  [disabled]="!settings().notifications.enabled"
+                />
+                <div class="notification-info">
+                  <span class="notification-title">Error Alerts</span>
+                  <small>Receive immediate alerts for system errors</small>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Action Buttons -->
+      <div class="settings-actions">
+        <button class="btn btn-primary" (click)="saveSettings()" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner-small"></span> Saving...
+          } @else {
+            💾 Save Settings
+          }
+        </button>
+        <button class="btn btn-secondary" (click)="resetSettings()" [disabled]="loading()">
+          🔄 Reset to Defaults
+        </button>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { Modal, ModalFooter } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,8 @@ interface ProductDetailModalProps {
 }
 
 export function ProductDetailModal({ product, isOpen, onClose }: ProductDetailModalProps) {
+  const [selectedImage, setSelectedImage] = React.useState(0);
+
   if (!product) return null;
 
   const priceChange =
@@ -55,7 +58,6 @@ export function ProductDetailModal({ product, isOpen, onClose }: ProductDetailMo
         100
       : null;
 
-  const [selectedImage, setSelectedImage] = React.useState(0);
   const images = product.public_data.images || [];
 
   return (
@@ -65,10 +67,12 @@ export function ProductDetailModal({ product, isOpen, onClose }: ProductDetailMo
         {images.length > 0 && (
           <div className="space-y-3">
             <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
-              <img
+              <Image
                 src={images[selectedImage]}
                 alt={product.public_data.title}
-                className="w-full h-full object-contain"
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
               />
             </div>
             {images.length > 1 && (
@@ -77,13 +81,13 @@ export function ProductDetailModal({ product, isOpen, onClose }: ProductDetailMo
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden transition ${
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-lg border-2 overflow-hidden transition ${
                       selectedImage === idx
                         ? 'border-blue-500'
                         : 'border-gray-700 hover:border-gray-600'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <Image src={img} alt="" fill className="object-cover" sizes="80px" />
                   </button>
                 ))}
               </div>

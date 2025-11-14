@@ -40,3 +40,19 @@ export { getMonitoredProducts } from "./api/products";
 export { addProductToMonitoring } from "./api/products";
 export { getUserSettings, updateUserSettings } from "./api/settings";
 export { getAnalytics } from "./api/analytics";
+
+// Product Import Pipeline (Step 1)
+export { importProduct, getRawProducts, deleteRawProduct } from "./api/product-import";
+
+// AI Enhancement Pipeline (Step 2)
+export { onRawProductCreated, triggerManualEnhancement } from "./ai-pipeline/enhancement-trigger";
+export {
+  getEnhancedProducts,
+  getEnhancedProduct,
+  updateEnhancedProduct,
+  deleteEnhancedProduct,
+  markAsPublished,
+} from "./api/enhanced-products";
+
+// Product Publishing (Step 4)
+export { publishProduct, unpublishProduct, getPublishStatus } from "./publishers/publish-product";

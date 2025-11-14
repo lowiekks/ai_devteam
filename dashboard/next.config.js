@@ -2,7 +2,24 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['ae01.alicdn.com', 'aliexpress.com', 'cdn.shopify.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.alicdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'aliexpress.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.shopify.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
+      },
+    ],
   },
   // Skip build-time validation of environment variables for Firebase
   env: {

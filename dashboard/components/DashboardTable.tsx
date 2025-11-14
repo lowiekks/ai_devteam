@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Product } from '@/types/product';
 import { Zap, AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -93,14 +94,15 @@ export default function DashboardTable({ products, onRefresh }: DashboardTablePr
                   {/* Product */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={product.original_image_url}
-                        alt={product.name}
-                        className="w-12 h-12 rounded-lg object-cover border border-gray-600"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder-product.png';
-                        }}
-                      />
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-600 flex-shrink-0">
+                        <Image
+                          src={product.original_image_url || '/placeholder-product.png'}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                        />
+                      </div>
                       <div>
                         <div className="text-sm font-medium text-white line-clamp-1">
                           {product.name}

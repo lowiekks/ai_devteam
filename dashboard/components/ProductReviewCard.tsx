@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Check, X, Edit, Eye, EyeOff, Instagram, Facebook } from 'lucide-react';
 
 interface Product {
@@ -45,13 +46,12 @@ export function ProductReviewCard({ product, onApprove, onReject, onEdit }: Prod
         {/* Left: Images */}
         <div className="bg-gray-900/50 p-8 flex flex-col">
           <div className="relative aspect-square bg-gray-800 rounded-lg overflow-hidden mb-4">
-            <img
-              src={images[currentImageIndex]}
+            <Image
+              src={images[currentImageIndex] || '/placeholder-product.png'}
               alt={product.public_data.title}
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                e.currentTarget.src = '/placeholder-product.png';
-              }}
+              fill
+              className="object-contain"
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
 
             {/* Image Navigation */}
@@ -116,7 +116,7 @@ export function ProductReviewCard({ product, onApprove, onReject, onEdit }: Prod
           {!showOriginal && (
             <div className="mb-6">
               <p className="text-gray-300 text-lg italic leading-relaxed">
-                "{product.public_data.short_description}"
+                &quot;{product.public_data.short_description}&quot;
               </p>
             </div>
           )}

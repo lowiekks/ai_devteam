@@ -1,8 +1,16 @@
-# 🚀 Enterprise Dropshipping Monitor - Phase 4
+# 🚀 Enterprise Dropshipping Monitor - Full Stack Platform
 
 **AI-Powered Content Refinery + Ecosystem Growth Engine**
 
 A complete, production-ready SaaS platform for automated dropshipping with AI content generation, viral store creation, SEO automation, and plugin marketplace monetization.
+
+## 📦 Architecture
+
+This is a monorepo containing three applications:
+
+- **Dashboard** (Next.js 14) - Customer-facing web application
+- **Admin Panel** (Angular 20) - Administrative interface for platform management
+- **Functions** (Firebase) - Backend Cloud Functions and API
 
 ---
 
@@ -387,41 +395,58 @@ npm test
 
 ### Local Development
 
+From the root directory:
+
 ```bash
-# Start Firebase emulators
-cd functions
-npm run serve
+# Install all dependencies
+npm install
 
-# Start Next.js dev server
-cd dashboard
-npm run dev
+# Start Dashboard (Next.js) - Port 3000
+npm run dev:dashboard
 
-# Dashboard: http://localhost:3000
-# Functions: http://localhost:5001
+# Start Admin Panel (Angular) - Port 4200
+npm run dev:admin
+
+# Start Functions (Firebase Emulators) - Port 5001
+npm run dev:functions
 ```
+
+**Running Services:**
+- Dashboard: http://localhost:3000
+- Admin Panel: http://localhost:4200
+- Functions: http://localhost:5001
 
 ### Build
 
+From the root directory:
+
 ```bash
-# Build functions
-cd functions
+# Build all applications
 npm run build
 
-# Build dashboard
-cd dashboard
-npm run build
+# Or build individually
+npm run build:dashboard  # Next.js dashboard
+npm run build:admin      # Angular admin panel
+npm run build:functions  # Firebase Functions
 ```
 
 ### Deploy
 
 ```bash
-# Automated deployment
-./scripts/deploy.sh --all
-
-# Or manually
-firebase deploy --only functions
+# Deploy Dashboard to Vercel
+cd dashboard
 vercel --prod
+
+# Deploy Admin Panel to Vercel (separate project)
+cd admin-panel
+vercel --prod
+
+# Deploy Functions to Firebase
+cd functions
+firebase deploy --only functions
 ```
+
+**Note**: See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed deployment instructions.
 
 ---
 

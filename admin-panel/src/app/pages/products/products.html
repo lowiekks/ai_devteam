@@ -1,0 +1,271 @@
+<div class="products-layout">
+  <app-sidebar />
+
+  <main class="products-content">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h1>📦 Products Monitoring</h1>
+        <p>View and manage monitored products across all users</p>
+      </div>
+      <div class="header-actions">
+        <div class="stats-mini">
+          <div class="stat-mini">
+            <span class="stat-value">{{ filteredProducts().length }}</span>
+            <span class="stat-label">Products</span>
+          </div>
+        </div>
+        <button class="btn-action btn-export" (click)="exportToCSV()">
+          📥 Export CSV
+        </button>
+      </div>
+    </div>
+
+    <!-- Success Message -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="success-close">✕</button>
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <span>{{ error() }}</span>
+        <button (click)="error.set(null)" class="error-close">✕</button>
+      </div>
+    }
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Search products by title..."
+          [value]="searchQuery()"
+          (input)="onSearchChange($event)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <select [value]="statusFilter()" (change)="onStatusFilterChange($event)">
+          <option value="all">All Status</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+          <option value="pending">Pending</option>
+          <option value="error">Error</option>
+        </select>
+
+        <select [value]="platformFilter()" (change)="onPlatformFilterChange($event)">
+          <option value="all">All Platforms</option>
+          <option value="aliexpress">AliExpress</option>
+          <option value="shopify">Shopify</option>
+          <option value="woocommerce">WooCommerce</option>
+          <option value="amazon">Amazon</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading products...</p>
+      </div>
+    }
+
+    <!-- Products Grid -->
+    @if (!loading() && filteredProducts().length > 0) {
+      <div class="products-grid">
+        @for (product of filteredProducts(); track product.id) {
+          <div class="product-card">
+            <div class="product-image">
+              @if (product.public_data.images && product.public_data.images.length > 0) {
+                <img
+                  [src]="product.public_data.images[0]"
+                  [alt]="product.public_data.title"
+                  loading="lazy"
+                />
+              } @else {
+                <div class="image-placeholder">📦</div>
+              }
+              <div class="product-badges">
+                <span class="badge" [class]="getStatusBadgeClass(product.content_status)">
+                  {{ product.content_status }}
+                </span>
+              </div>
+            </div>
+
+            <div class="product-content">
+              <h3 class="product-title">
+                {{ truncateText(product.public_data.title, 60) }}
+              </h3>
+
+              @if (product.public_data.short_description) {
+                <p class="product-description">
+                  {{ truncateText(product.public_data.short_description, 100) }}
+                </p>
+              }
+
+              <div class="product-meta">
+                <div class="meta-item">
+                  <span class="meta-icon">{{ getPlatformIcon(product.monitored_supplier.platform) }}</span>
+                  <span>{{ product.monitored_supplier.platform }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-icon">📅</span>
+                  <span>{{ formatDate(product.created_at) }}</span>
+                </div>
+              </div>
+
+              <div class="product-price">
+                <div class="price-current">
+                  {{ formatPrice(product.monitored_supplier.current_price) }}
+                </div>
+                @if (getPriceChange(product) !== null) {
+                  <div
+                    class="price-change"
+                    [class.positive]="getPriceChange(product)! > 0"
+                    [class.negative]="getPriceChange(product)! < 0"
+                  >
+                    @if (getPriceChange(product)! > 0) {
+                      ↑ {{ getPriceChange(product)!.toFixed(1) }}%
+                    } @else {
+                      ↓ {{ abs(getPriceChange(product)!).toFixed(1) }}%
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="product-actions">
+                <button class="btn-action btn-view" (click)="viewProduct(product)">
+                  👁️ View
+                </button>
+                <button class="btn-action btn-delete" (click)="deleteProduct(product.id)">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading() && filteredProducts().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>No products found</h3>
+        <p>Try adjusting your filters or search query</p>
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Product Detail Modal -->
+@if (isModalOpen() && selectedProduct()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>📦 Product Details</h2>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="product-detail">
+          @if (selectedProduct()!.public_data.images && selectedProduct()!.public_data.images!.length > 0) {
+            <div class="detail-images">
+              @for (image of selectedProduct()!.public_data.images; track image) {
+                <img [src]="image" [alt]="selectedProduct()!.public_data.title" loading="lazy" />
+              }
+            </div>
+          }
+
+          <div class="detail-section">
+            <h3>Product Information</h3>
+            <div class="detail-field">
+              <label>Title</label>
+              <div class="field-value">{{ selectedProduct()!.public_data.title }}</div>
+            </div>
+
+            @if (selectedProduct()!.public_data.short_description) {
+              <div class="detail-field">
+                <label>Description</label>
+                <div class="field-value">{{ selectedProduct()!.public_data.short_description }}</div>
+              </div>
+            }
+
+            <div class="detail-field">
+              <label>Status</label>
+              <span class="badge" [class]="getStatusBadgeClass(selectedProduct()!.content_status)">
+                {{ selectedProduct()!.content_status }}
+              </span>
+            </div>
+
+            <div class="detail-field">
+              <label>Created</label>
+              <div class="field-value">{{ formatDate(selectedProduct()!.created_at) }}</div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h3>Supplier Information</h3>
+            <div class="detail-field">
+              <label>Platform</label>
+              <div class="field-value">
+                {{ getPlatformIcon(selectedProduct()!.monitored_supplier.platform) }}
+                {{ selectedProduct()!.monitored_supplier.platform }}
+              </div>
+            </div>
+
+            <div class="detail-field">
+              <label>Source URL</label>
+              <a
+                [href]="selectedProduct()!.monitored_supplier.url"
+                target="_blank"
+                class="field-link"
+              >
+                {{ truncateText(selectedProduct()!.monitored_supplier.url, 60) }} ↗
+              </a>
+            </div>
+
+            <div class="detail-field">
+              <label>Current Price</label>
+              <div class="field-value price-large">
+                {{ formatPrice(selectedProduct()!.monitored_supplier.current_price) }}
+              </div>
+            </div>
+
+            @if (selectedProduct()!.monitored_supplier.previous_price) {
+              <div class="detail-field">
+                <label>Previous Price</label>
+                <div class="field-value">
+                  {{ formatPrice(selectedProduct()!.monitored_supplier.previous_price) }}
+                  @if (getPriceChange(selectedProduct()!) !== null) {
+                    <span
+                      class="price-change-inline"
+                      [class.positive]="getPriceChange(selectedProduct()!)! > 0"
+                      [class.negative]="getPriceChange(selectedProduct()!)! < 0"
+                    >
+                      ({{ getPriceChange(selectedProduct()!)!.toFixed(1) }}%)
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}

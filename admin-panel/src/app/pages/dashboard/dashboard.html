@@ -1,0 +1,70 @@
+<div class="dashboard-layout">
+  <app-sidebar />
+
+  <main class="dashboard-content">
+    <div class="dashboard-header">
+      <h1>Dashboard Overview</h1>
+      <p>Welcome to the Dropship Monitor Admin Panel</p>
+    </div>
+
+    <div class="stats-grid">
+      @for (stat of stats(); track stat.label) {
+        <div class="stat-card">
+          <div class="stat-icon">{{ stat.icon }}</div>
+          <div class="stat-info">
+            <div class="stat-label">{{ stat.label }}</div>
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-change positive">{{ stat.change }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-card">
+        <h2>Recent Activity</h2>
+        <div class="card-content">
+          <div class="activity-item">
+            <div class="activity-icon">📦</div>
+            <div class="activity-info">
+              <div class="activity-title">New product imported</div>
+              <div class="activity-time">2 minutes ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon">👥</div>
+            <div class="activity-info">
+              <div class="activity-title">New user registered</div>
+              <div class="activity-time">15 minutes ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon">💰</div>
+            <div class="activity-info">
+              <div class="activity-title">Payment received</div>
+              <div class="activity-time">1 hour ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-card">
+        <h2>Quick Actions</h2>
+        <div class="card-content">
+          <button class="action-btn">
+            <span>➕</span> Add New Product
+          </button>
+          <button class="action-btn">
+            <span>👥</span> Manage Users
+          </button>
+          <button class="action-btn">
+            <span>📊</span> View Analytics
+          </button>
+          <button class="action-btn">
+            <span>⚙️</span> System Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
