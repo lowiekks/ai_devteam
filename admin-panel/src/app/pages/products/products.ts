@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../components/sidebar/sidebar';
 import { FirestoreService, Product } from '../../services/firestore.service';
+import { AuthService } from '../../services/auth.service';
+import { SearchService } from '../../services/search.service';
 import { orderBy, limit } from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 
@@ -15,6 +17,8 @@ import { Subscription } from 'rxjs';
 })
 export class Products implements OnInit, OnDestroy {
   firestoreService = inject(FirestoreService);
+  authService = inject(AuthService);
+  searchService = inject(SearchService);
 
   products = signal<Product[]>([]);
   filteredProducts = signal<Product[]>([]);
@@ -68,12 +72,22 @@ export class Products implements OnInit, OnDestroy {
   applyFilters() {
     let filtered = this.products();
 
-    // Search filter
+    // Advanced search filter using SearchService
     if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
-      filtered = filtered.filter((product) =>
-        product.public_data.title.toLowerCase().includes(query)
+      filtered = this.searchService.fuzzySearch(
+        filtered,
+        this.searchQuery(),
+        ['public_data.title', 'public_data.short_description', 'monitored_supplier.platform'] as any
       );
+
+      // Track search in history
+      if (this.searchQuery().length >= 3) {
+        this.searchService.addToHistory(
+          this.searchQuery(),
+          filtered.length,
+          'products'
+        );
+      }
     }
 
     // Status filter
@@ -126,9 +140,24 @@ export class Products implements OnInit, OnDestroy {
       return;
     }
 
+    const product = this.products().find((p) => p.id === productId);
+
     try {
       this.loading.set(true);
       await this.firestoreService.deleteProduct(productId);
+
+      // Log activity
+      await this.firestoreService.logActivity(
+        'delete',
+        'product',
+        `Deleted product: ${product?.public_data.title || 'Unknown'}`,
+        {
+          entityId: productId,
+          entityName: product?.public_data.title || 'Unknown',
+          adminEmail: this.authService.getUserEmail() || 'admin',
+        }
+      );
+
       this.loadProducts();
     } catch (error: any) {
       this.error.set(error.message || 'Failed to delete product');
@@ -265,6 +294,17 @@ export class Products implements OnInit, OnDestroy {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Log export activity
+    this.firestoreService.logActivity(
+      'export',
+      'product',
+      `Exported ${products.length} products to CSV`,
+      {
+        adminEmail: this.authService.getUserEmail() || 'admin',
+        metadata: { count: products.length, format: 'CSV' },
+      }
+    );
 
     this.successMessage.set(`Exported ${products.length} products to CSV`);
     setTimeout(() => this.successMessage.set(null), 3000);

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from './services/auth.service';
+import { permissionGuard } from './guards/permission.guard';
 import { Login } from './pages/login/login';
 import { Dashboard } from './pages/dashboard/dashboard';
 import { Users } from './pages/users/users';
@@ -58,22 +59,22 @@ export const routes: Routes = [
   {
     path: 'products',
     component: Products,
-    canActivate: [authGuard]
+    canActivate: [authGuard, permissionGuard('canViewProducts')]
   },
   {
     path: 'analytics',
     component: Analytics,
-    canActivate: [authGuard]
+    canActivate: [authGuard, permissionGuard('canViewAnalytics')]
   },
   {
     path: 'settings',
     component: Settings,
-    canActivate: [authGuard]
+    canActivate: [authGuard, permissionGuard('canChangeSettings')]
   },
   {
     path: 'activity-logs',
     component: ActivityLogs,
-    canActivate: [authGuard]
+    canActivate: [authGuard, permissionGuard('canViewActivityLogs')]
   },
   {
     path: '**',

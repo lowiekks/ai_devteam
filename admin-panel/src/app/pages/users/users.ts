@@ -5,6 +5,7 @@ import { Sidebar } from '../../components/sidebar/sidebar';
 import { FirestoreService, User } from '../../services/firestore.service';
 import { AuthService } from '../../services/auth.service';
 import { SearchService } from '../../services/search.service';
+import { EmailNotificationService } from '../../services/email-notification.service';
 import { orderBy, limit, where } from '@angular/fire/firestore';
 import { Subscription } from 'rxjs';
 
@@ -19,6 +20,7 @@ export class Users implements OnInit, OnDestroy {
   firestoreService = inject(FirestoreService);
   authService = inject(AuthService);
   searchService = inject(SearchService);
+  emailService = inject(EmailNotificationService);
 
   users = signal<User[]>([]);
   filteredUsers = signal<User[]>([]);
@@ -180,7 +182,7 @@ export class Users implements OnInit, OnDestroy {
 
       if (this.isCreating()) {
         // Create new user
-        await this.firestoreService.createUser({
+        const userId = await this.firestoreService.createUser({
           email: user.email,
           displayName: user.displayName,
           role: user.role,
@@ -188,8 +190,35 @@ export class Users implements OnInit, OnDestroy {
           shopifyUrl: user.shopifyUrl,
           woocommerceUrl: user.woocommerceUrl,
         });
+
+        // Log activity
+        await this.firestoreService.logActivity(
+          'create',
+          'user',
+          `Created user: ${user.email}`,
+          {
+            entityId: userId,
+            entityName: user.displayName || user.email,
+            adminEmail: this.authService.getUserEmail() || 'admin',
+            metadata: { role: user.role, status: user.status },
+          }
+        );
+
+        // Send welcome email
+        try {
+          await this.emailService.sendUserSignupNotification(
+            user.email,
+            user.displayName || 'User'
+          );
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+        }
+
         this.successMessage.set('User created successfully!');
       } else {
+        // Get original user for comparison
+        const originalUser = this.users().find((u) => u.id === user.id);
+
         // Update existing user
         await this.firestoreService.updateUser(user.id, {
           displayName: user.displayName,
@@ -198,6 +227,33 @@ export class Users implements OnInit, OnDestroy {
           shopifyUrl: user.shopifyUrl,
           woocommerceUrl: user.woocommerceUrl,
         });
+
+        // Log activity
+        await this.firestoreService.logActivity(
+          'update',
+          'user',
+          `Updated user: ${user.email}`,
+          {
+            entityId: user.id,
+            entityName: user.displayName || user.email,
+            adminEmail: this.authService.getUserEmail() || 'admin',
+            metadata: { changes: 'User profile updated' },
+          }
+        );
+
+        // Send status change email if status changed
+        if (originalUser && originalUser.status !== user.status) {
+          try {
+            await this.emailService.sendUserStatusChangeNotification(
+              user.email,
+              user.displayName || 'User',
+              user.status
+            );
+          } catch (emailError) {
+            console.error('Failed to send status change email:', emailError);
+          }
+        }
+
         this.successMessage.set('User updated successfully!');
       }
 
@@ -218,9 +274,24 @@ export class Users implements OnInit, OnDestroy {
       return;
     }
 
+    const user = this.users().find((u) => u.id === userId);
+
     try {
       this.loading.set(true);
       await this.firestoreService.deleteUser(userId);
+
+      // Log activity
+      await this.firestoreService.logActivity(
+        'delete',
+        'user',
+        `Deleted user: ${user?.email || 'Unknown'}`,
+        {
+          entityId: userId,
+          entityName: user?.displayName || user?.email || 'Unknown',
+          adminEmail: this.authService.getUserEmail() || 'admin',
+        }
+      );
+
       this.successMessage.set('User deleted successfully!');
       setTimeout(() => this.successMessage.set(null), 3000);
       this.loadUsers();
@@ -306,6 +377,18 @@ export class Users implements OnInit, OnDestroy {
         this.firestoreService.deleteUser(id)
       );
       await Promise.all(deletePromises);
+
+      // Log bulk delete activity
+      await this.firestoreService.logActivity(
+        'delete',
+        'user',
+        `Bulk deleted ${selected.size} users`,
+        {
+          adminEmail: this.authService.getUserEmail() || 'admin',
+          metadata: { count: selected.size },
+        }
+      );
+
       this.selectedUserIds.set(new Set());
       this.selectAll.set(false);
       this.successMessage.set(`Successfully deleted ${selected.size} user(s)`);
@@ -328,6 +411,18 @@ export class Users implements OnInit, OnDestroy {
         this.firestoreService.updateUser(id, { status })
       );
       await Promise.all(updatePromises);
+
+      // Log bulk update activity
+      await this.firestoreService.logActivity(
+        'update',
+        'user',
+        `Bulk updated ${selected.size} users to ${status} status`,
+        {
+          adminEmail: this.authService.getUserEmail() || 'admin',
+          metadata: { count: selected.size, newStatus: status },
+        }
+      );
+
       this.selectedUserIds.set(new Set());
       this.selectAll.set(false);
       this.successMessage.set(
@@ -398,6 +493,17 @@ export class Users implements OnInit, OnDestroy {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    // Log export activity
+    this.firestoreService.logActivity(
+      'export',
+      'user',
+      `Exported ${users.length} users to CSV`,
+      {
+        adminEmail: this.authService.getUserEmail() || 'admin',
+        metadata: { count: users.length, format: 'CSV' },
+      }
+    );
 
     this.successMessage.set(`Exported ${users.length} users to CSV`);
     setTimeout(() => this.successMessage.set(null), 3000);
