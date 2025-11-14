@@ -105,6 +105,26 @@ export class FirestoreService {
     }
   }
 
+  async createUser(userData: Omit<User, 'id' | 'createdAt'>): Promise<string> {
+    this.usersLoading.set(true);
+    this.usersError.set(null);
+
+    try {
+      const usersCollection = collection(this.firestore, 'users');
+      const newUser = {
+        ...userData,
+        createdAt: Timestamp.now(),
+      };
+      const docRef = await addDoc(usersCollection, newUser);
+      return docRef.id;
+    } catch (error: any) {
+      this.usersError.set(error.message || 'Failed to create user');
+      throw error;
+    } finally {
+      this.usersLoading.set(false);
+    }
+  }
+
   async updateUser(userId: string, data: Partial<User>): Promise<void> {
     this.usersLoading.set(true);
     this.usersError.set(null);

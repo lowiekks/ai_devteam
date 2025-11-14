@@ -8,7 +8,24 @@
         <h1>👥 Users Management</h1>
         <p>Manage user accounts, roles, and permissions</p>
       </div>
+      <div class="header-actions">
+        <button class="btn-action btn-export" (click)="exportToCSV()">
+          📥 Export CSV
+        </button>
+        <button class="btn-action btn-create" (click)="openCreateModal()">
+          ➕ Create User
+        </button>
+      </div>
     </div>
+
+    <!-- Success Message -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="success-close">✕</button>
+      </div>
+    }
 
     <!-- Error Message -->
     @if (error()) {
@@ -16,6 +33,29 @@
         <span class="error-icon">⚠️</span>
         <span>{{ error() }}</span>
         <button (click)="error.set(null)" class="error-close">✕</button>
+      </div>
+    }
+
+    <!-- Bulk Actions Toolbar -->
+    @if (selectedUserIds().size > 0) {
+      <div class="bulk-actions-toolbar">
+        <div class="bulk-info">
+          <span>{{ selectedUserIds().size }} selected</span>
+        </div>
+        <div class="bulk-actions">
+          <button class="bulk-btn" (click)="bulkUpdateStatus('active')">
+            Set Active
+          </button>
+          <button class="bulk-btn" (click)="bulkUpdateStatus('inactive')">
+            Set Inactive
+          </button>
+          <button class="bulk-btn" (click)="bulkUpdateStatus('suspended')">
+            Suspend
+          </button>
+          <button class="bulk-btn bulk-btn-danger" (click)="bulkDelete()">
+            🗑️ Delete Selected
+          </button>
+        </div>
       </div>
     }
 
@@ -61,6 +101,14 @@
         <table class="users-table">
           <thead>
             <tr>
+              <th class="checkbox-cell">
+                <input
+                  type="checkbox"
+                  [checked]="selectAll()"
+                  (change)="toggleSelectAll()"
+                  class="checkbox"
+                />
+              </th>
               <th>User</th>
               <th>Email</th>
               <th>Role</th>
@@ -72,7 +120,15 @@
           </thead>
           <tbody>
             @for (user of filteredUsers(); track user.id) {
-              <tr>
+              <tr [class.selected]="selectedUserIds().has(user.id)">
+                <td class="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedUserIds().has(user.id)"
+                    (change)="toggleUserSelection(user.id)"
+                    class="checkbox"
+                  />
+                </td>
                 <td>
                   <div class="user-cell">
                     <div class="user-avatar">
@@ -144,13 +200,15 @@
   </main>
 </div>
 
-<!-- User Detail/Edit Modal -->
+<!-- User Detail/Edit/Create Modal -->
 @if (isModalOpen()) {
   <div class="modal-overlay" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>
-          @if (isEditing()) {
+          @if (isCreating()) {
+            ➕ Create New User
+          } @else if (isEditing()) {
             ✏️ Edit User
           } @else {
             👁️ User Details
@@ -162,13 +220,18 @@
       @if (selectedUser()) {
         <div class="modal-body">
           <div class="form-group">
-            <label>Email</label>
+            <label>Email *</label>
             <input
               type="email"
-              [value]="selectedUser()!.email"
-              [disabled]="true"
+              [(ngModel)]="selectedUser()!.email"
+              [disabled]="!isCreating()"
               class="form-input"
+              placeholder="user@example.com"
+              [required]="true"
             />
+            @if (isCreating()) {
+              <small class="form-hint">User will receive an email invitation</small>
+            }
           </div>
 
           <div class="form-group">
@@ -176,7 +239,7 @@
             <input
               type="text"
               [(ngModel)]="selectedUser()!.displayName"
-              [disabled]="!isEditing()"
+              [disabled]="!isEditing() && !isCreating()"
               class="form-input"
               placeholder="Enter display name"
             />
@@ -187,7 +250,7 @@
               <label>Role</label>
               <select
                 [(ngModel)]="selectedUser()!.role"
-                [disabled]="!isEditing()"
+                [disabled]="!isEditing() && !isCreating()"
                 class="form-select"
               >
                 <option value="user">User</option>
@@ -199,7 +262,7 @@
               <label>Status</label>
               <select
                 [(ngModel)]="selectedUser()!.status"
-                [disabled]="!isEditing()"
+                [disabled]="!isEditing() && !isCreating()"
                 class="form-select"
               >
                 <option value="active">Active</option>
@@ -214,7 +277,7 @@
             <input
               type="url"
               [(ngModel)]="selectedUser()!.shopifyUrl"
-              [disabled]="!isEditing()"
+              [disabled]="!isEditing() && !isCreating()"
               class="form-input"
               placeholder="https://your-store.myshopify.com"
             />
@@ -225,27 +288,33 @@
             <input
               type="url"
               [(ngModel)]="selectedUser()!.woocommerceUrl"
-              [disabled]="!isEditing()"
+              [disabled]="!isEditing() && !isCreating()"
               class="form-input"
               placeholder="https://your-store.com"
             />
           </div>
 
-          <div class="form-group">
-            <label>Joined Date</label>
-            <input
-              type="text"
-              [value]="formatDate(selectedUser()!.createdAt)"
-              [disabled]="true"
-              class="form-input"
-            />
-          </div>
+          @if (!isCreating()) {
+            <div class="form-group">
+              <label>Joined Date</label>
+              <input
+                type="text"
+                [value]="formatDate(selectedUser()!.createdAt)"
+                [disabled]="true"
+                class="form-input"
+              />
+            </div>
+          }
         </div>
 
         <div class="modal-footer">
-          @if (isEditing()) {
+          @if (isEditing() || isCreating()) {
             <button class="btn btn-primary" (click)="saveUser()">
-              💾 Save Changes
+              @if (isCreating()) {
+                ➕ Create User
+              } @else {
+                💾 Save Changes
+              }
             </button>
             <button class="btn btn-secondary" (click)="closeModal()">
               Cancel
