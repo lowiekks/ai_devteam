@@ -6,6 +6,7 @@ import { httpsCallable } from 'firebase/functions';
 import { onAuthStateChanged } from 'firebase/auth';
 import { PluginCard } from '@/components/PluginCard';
 import { MyPluginsPanel } from '@/components/MyPluginsPanel';
+import { useToast } from '@/components/ui/toast';
 
 interface Plugin {
   plugin_id: string;
@@ -20,6 +21,7 @@ interface Plugin {
 }
 
 export default function MarketplacePage() {
+  const { showToast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [plugins, setPlugins] = useState<Plugin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,25 +60,39 @@ export default function MarketplacePage() {
       const result: any = await installPlugin({ pluginId });
 
       if (result.data.success) {
-        // Refresh plugins list
         await loadPlugins();
-        alert(result.data.message);
+        showToast({
+          type: 'success',
+          title: 'Plugin installed',
+          message: result.data.message || 'Plugin successfully installed!',
+        });
       }
     } catch (error: any) {
-      alert(error.message || 'Failed to install plugin');
+      showToast({
+        type: 'error',
+        title: 'Installation failed',
+        message: error.message || 'Failed to install plugin',
+      });
     }
   };
 
   const handleUninstall = async (pluginId: string) => {
-    if (!confirm('Are you sure you want to uninstall this plugin?')) return;
-
     try {
       const uninstallPlugin = httpsCallable(functions, 'uninstallPlugin');
       await uninstallPlugin({ pluginId });
 
       await loadPlugins();
+      showToast({
+        type: 'success',
+        title: 'Plugin uninstalled',
+        message: 'Plugin successfully removed',
+      });
     } catch (error: any) {
-      alert(error.message || 'Failed to uninstall plugin');
+      showToast({
+        type: 'error',
+        title: 'Uninstall failed',
+        message: error.message || 'Failed to uninstall plugin',
+      });
     }
   };
 
@@ -91,34 +107,20 @@ export default function MarketplacePage() {
   const totalMonthlyCost = installedPlugins.reduce((sum, p) => sum + p.monthly_cost, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+    <div className="container mx-auto px-6 py-8">
       {/* Header */}
-      <header className="border-b border-gray-700 bg-gray-900/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Plugin Marketplace</h1>
-              <p className="text-sm text-gray-400">
-                Supercharge your store with powerful add-ons
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-xs text-gray-400">Monthly Cost</div>
-                <div className="text-xl font-bold text-green-400">${totalMonthlyCost.toFixed(2)}</div>
-              </div>
-              <a
-                href="/"
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-              >
-                Back to Dashboard
-              </a>
-            </div>
-          </div>
+      <div className="flex items-center justify-between mb-8 animate-fade-in">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Plugin Marketplace</h1>
+          <p className="text-gray-400">
+            Supercharge your store with powerful add-ons
+          </p>
         </div>
-      </header>
-
-      <div className="container mx-auto px-6 py-8">
+        <div className="text-right">
+          <div className="text-xs text-gray-400">Monthly Cost</div>
+          <div className="text-2xl font-bold text-green-400">${totalMonthlyCost.toFixed(2)}</div>
+        </div>
+      </div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - My Plugins */}
           <div className="lg:col-span-1">
@@ -171,7 +173,6 @@ export default function MarketplacePage() {
               </div>
             )}
           </div>
-        </div>
       </div>
     </div>
   );
