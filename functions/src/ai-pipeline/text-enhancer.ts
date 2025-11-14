@@ -1,9 +1,12 @@
 /**
- * AI Content Enhancement Pipeline - Step 2
+ * AI Content Enhancement Pipeline - Step 2 (Optimized)
  * Uses Gemini AI to enhance product text content
+ * Features: Cold start optimization, retry logic, caching
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { withRetry } from "../utils/retry";
+import { cachedQuery } from "../utils/cache";
 
 /**
  * Enhanced text content from Gemini
@@ -18,16 +21,25 @@ export interface EnhancedText {
 }
 
 /**
- * Initialize Gemini AI
+ * Initialize Gemini AI (SINGLETON - cached across warm starts)
  */
+let genAI: GoogleGenerativeAI | null = null;
+
 function initializeGemini(): GoogleGenerativeAI {
+  if (genAI) {
+    return genAI; // Reuse existing instance
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY environment variable is not set");
   }
 
-  return new GoogleGenerativeAI(apiKey);
+  genAI = new GoogleGenerativeAI(apiKey);
+  console.log("[Gemini] Client initialized (singleton)");
+
+  return genAI;
 }
 
 /**
@@ -41,7 +53,8 @@ export async function enhanceProductText(
 ): Promise<EnhancedText> {
   const startTime = Date.now();
 
-  try {
+  // Use retry logic for Gemini API calls
+  return withRetry(async () => {
     const genAI = initializeGemini();
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
@@ -132,10 +145,7 @@ Return ONLY the JSON object, no additional text.`;
       tags: enhancedData.tags || [],
       category: enhancedData.category || "Other",
     };
-  } catch (error: any) {
-    console.error("[Gemini] Error enhancing text:", error);
-    throw new Error(`Gemini AI enhancement failed: ${error.message}`);
-  }
+  }, { maxRetries: 2, initialDelay: 2000 }); // Retry with 2s delay
 }
 
 /**

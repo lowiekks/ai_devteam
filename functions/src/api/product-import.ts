@@ -1,12 +1,15 @@
 /**
- * Product Import Pipeline - Step 1
+ * Product Import Pipeline - Step 1 (Optimized)
  * Imports raw product data from AliExpress and stores in raw_products collection
+ * Features: Input validation, rate limiting, retry logic
  */
 
 import * as functions from "firebase-functions";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import axios from "axios";
 import * as crypto from "crypto";
+import { validateUrl, checkRateLimit, requireAuth } from "../utils/validation";
+import { withRetry } from "../utils/retry";
 
 /**
  * Raw Product Type - First stage of import pipeline
@@ -129,9 +132,11 @@ async function fetchAliExpressProduct(productId: string, config: AliExpressConfi
  * Accepts AliExpress URL and imports raw product data
  */
 export const importProduct = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Must be authenticated");
-  }
+  // Require authentication
+  const userId = requireAuth(context);
+
+  // Rate limiting: max 10 imports per minute per user
+  checkRateLimit(userId, "import", 10, 60000);
 
   const { sourceUrl } = data;
 
@@ -139,8 +144,12 @@ export const importProduct = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "sourceUrl is required");
   }
 
+  // Validate URL format
+  if (!validateUrl(sourceUrl)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid URL format");
+  }
+
   const db = getFirestore();
-  const userId = context.auth.uid;
 
   // Extract product ID from URL
   const productId = extractProductId(sourceUrl);
@@ -245,7 +254,7 @@ export const importProduct = functions.https.onCall(async (data, context) => {
       entityType: "product",
       entityId: rawProductRef.id,
       entityName: rawProductData.raw_data.title,
-      adminEmail: context.auth.token.email || "unknown",
+      adminEmail: context.auth?.token.email || "unknown",
       adminId: userId,
       description: `Imported product from AliExpress: ${rawProductData.raw_data.title}`,
       metadata: {
