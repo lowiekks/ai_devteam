@@ -43,3 +43,13 @@ export { getAnalytics } from "./api/analytics";
 
 // Product Import Pipeline (Step 1)
 export { importProduct, getRawProducts, deleteRawProduct } from "./api/product-import";
+
+// AI Enhancement Pipeline (Step 2)
+export { onRawProductCreated, triggerManualEnhancement } from "./ai-pipeline/enhancement-trigger";
+export {
+  getEnhancedProducts,
+  getEnhancedProduct,
+  updateEnhancedProduct,
+  deleteEnhancedProduct,
+  markAsPublished,
+} from "./api/enhanced-products";

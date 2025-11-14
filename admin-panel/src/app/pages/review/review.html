@@ -1,0 +1,234 @@
+<div class="review-layout">
+  <app-sidebar />
+
+  <div class="review-content">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1>✨ Review Queue</h1>
+        <p>Review AI-enhanced products before publishing</p>
+      </div>
+      <button class="btn-refresh" (click)="loadEnhancedProducts()" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner-small"></span>
+        } @else {
+          🔄
+        }
+        Refresh
+      </button>
+    </div>
+
+    <!-- Messages -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="close-btn">✕</button>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="error-banner">
+        <span class="error-icon">⚠️</span>
+        <span>{{ error() }}</span>
+        <button (click)="error.set(null)" class="close-btn">✕</button>
+      </div>
+    }
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().total }}</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✨</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().ready }}</div>
+          <div class="stat-label">Ready</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().enhancing }}</div>
+          <div class="stat-label">Enhancing</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🚀</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ stats().published }}</div>
+          <div class="stat-label">Published</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    @if (loading() && enhancedProducts().length === 0) {
+      <div class="loading-state">
+        <span class="spinner-large"></span>
+        <p>Loading enhanced products...</p>
+      </div>
+    } @else if (enhancedProducts().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">✨</div>
+        <h3>No Enhanced Products Yet</h3>
+        <p>Import products to see AI-enhanced results here</p>
+      </div>
+    } @else {
+      <div class="products-grid">
+        @for (product of enhancedProducts(); track product.enhanced_product_id) {
+          <div class="product-card" [class]="getStatusClass(product.status)">
+            <div class="product-image">
+              @if (product.enhanced.images && product.enhanced.images.length > 0) {
+                <img [src]="product.enhanced.images[0]" [alt]="product.enhanced.title" />
+              } @else if (product.original.images && product.original.images.length > 0) {
+                <img [src]="product.original.images[0]" [alt]="product.original.title" />
+              } @else {
+                <div class="no-image">📷</div>
+              }
+              <span class="status-badge" [class]="getStatusClass(product.status)">
+                {{ getStatusLabel(product.status) }}
+              </span>
+            </div>
+
+            <div class="product-info">
+              <h3 class="product-title">{{ product.enhanced.title || product.original.title }}</h3>
+              <p class="product-description">{{ product.enhanced.short_description || 'No description' }}</p>
+
+              <div class="product-meta">
+                <span class="meta-item">💰 ${{ product.pricing.suggested_price }}</span>
+                <span class="meta-item">📊 {{ product.pricing.profit_margin }}% profit</span>
+              </div>
+
+              @if (product.status === 'FAILED' && product.ai_processing.error_message) {
+                <div class="error-message">
+                  ⚠️ {{ product.ai_processing.error_message }}
+                </div>
+              }
+            </div>
+
+            <div class="product-actions">
+              <button class="btn-view" (click)="viewProduct(product)">
+                👁️ Review
+              </button>
+              <button class="btn-delete" (click)="deleteProduct(product.enhanced_product_id)">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Review Modal -->
+    @if (selectedProduct()) {
+      <div class="modal-overlay" (click)="closeReview()">
+        <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>✨ Review Product</h2>
+            <div class="header-actions">
+              <button class="btn-tab" [class.active]="viewMode() === 'enhanced'" (click)="viewMode.set('enhanced')">
+                Enhanced
+              </button>
+              <button class="btn-tab" [class.active]="viewMode() === 'comparison'" (click)="viewMode.set('comparison')">
+                Comparison
+              </button>
+              <button class="modal-close" (click)="closeReview()">✕</button>
+            </div>
+          </div>
+
+          <div class="modal-body">
+            @if (viewMode() === 'enhanced') {
+              <div class="enhanced-view">
+                <div class="image-gallery">
+                  @for (image of selectedProduct()!.enhanced.images; track image) {
+                    <img [src]="image" [alt]="selectedProduct()!.enhanced.title" class="gallery-image" />
+                  }
+                </div>
+
+                @if (isEditing()) {
+                  <div class="edit-form">
+                    <div class="form-group">
+                      <label>Title</label>
+                      <input type="text" [(ngModel)]="editedProduct().title" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                      <label>Short Description</label>
+                      <textarea [(ngModel)]="editedProduct().short_description" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                      <label>Long Description (HTML)</label>
+                      <textarea [(ngModel)]="editedProduct().long_description" class="form-textarea" rows="8"></textarea>
+                    </div>
+                  </div>
+                } @else {
+                  <h2>{{ selectedProduct()!.enhanced.title }}</h2>
+                  <p class="short-desc">{{ selectedProduct()!.enhanced.short_description }}</p>
+                  <div class="long-desc" [innerHTML]="selectedProduct()!.enhanced.long_description"></div>
+
+                  <h3>Features</h3>
+                  <ul class="features-list">
+                    @for (feature of selectedProduct()!.enhanced.features; track feature) {
+                      <li>{{ feature }}</li>
+                    }
+                  </ul>
+
+                  <div class="pricing-info">
+                    <div class="price-item">
+                      <span class="price-label">Suggested Price:</span>
+                      <span class="price-value">${{ selectedProduct()!.pricing.suggested_price }}</span>
+                    </div>
+                    <div class="price-item">
+                      <span class="price-label">Cost Price:</span>
+                      <span class="price-value">${{ selectedProduct()!.pricing.cost_price }}</span>
+                    </div>
+                    <div class="price-item">
+                      <span class="price-label">Profit Margin:</span>
+                      <span class="price-value">{{ selectedProduct()!.pricing.profit_margin }}%</span>
+                    </div>
+                  </div>
+
+                  <div class="tags-container">
+                    @for (tag of selectedProduct()!.enhanced.tags; track tag) {
+                      <span class="tag">{{ tag }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            } @else if (viewMode() === 'comparison') {
+              <div class="comparison-view">
+                <div class="comparison-column">
+                  <h3>Original</h3>
+                  <p><strong>{{ selectedProduct()!.original.title }}</strong></p>
+                  <div [innerHTML]="selectedProduct()!.original.description"></div>
+                </div>
+                <div class="comparison-column">
+                  <h3>AI-Enhanced</h3>
+                  <p><strong>{{ selectedProduct()!.enhanced.title }}</strong></p>
+                  <p>{{ selectedProduct()!.enhanced.short_description }}</p>
+                  <div [innerHTML]="selectedProduct()!.enhanced.long_description"></div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer">
+            @if (isEditing()) {
+              <button class="btn-secondary" (click)="cancelEditing()">Cancel</button>
+              <button class="btn-primary" (click)="saveEdits()">Save Changes</button>
+            } @else {
+              <button class="btn-secondary" (click)="closeReview()">Close</button>
+              <button class="btn-edit" (click)="startEditing()">✏️ Edit</button>
+              <button class="btn-primary">🚀 Publish to Store</button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

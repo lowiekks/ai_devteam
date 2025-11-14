@@ -12,6 +12,7 @@ import { Settings } from './pages/settings/settings';
 import { ActivityLogs } from './pages/activity-logs/activity-logs';
 import { Integrations } from './pages/integrations/integrations';
 import { Import } from './pages/import/import';
+import { Review } from './pages/review/review';
 
 // Auth guard function
 const authGuard = () => {
@@ -86,6 +87,11 @@ export const routes: Routes = [
   {
     path: 'import',
     component: Import,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'review',
+    component: Review,
     canActivate: [authGuard]
   },
   {

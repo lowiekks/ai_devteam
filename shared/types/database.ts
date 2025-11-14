@@ -70,6 +70,14 @@ export type ContentStatus =
   | "LIVE"            // Published and active
   | "REJECTED";       // Failed review
 
+// Enhanced Product Status (Step 2 of pipeline)
+export type EnhancedStatus =
+  | "PENDING"         // Waiting for AI enhancement
+  | "ENHANCING"       // AI is processing
+  | "READY"           // Enhanced and ready for review
+  | "PUBLISHED"       // Published to store
+  | "FAILED";         // Enhancement failed
+
 export interface ContentFlags {
   text_refined: boolean;
   images_refined: boolean;
@@ -151,6 +159,61 @@ export interface Product {
   created_at: Timestamp;
   updated_at: Timestamp;
   published_at?: Timestamp;  // When moved to LIVE
+}
+
+// ==================== ENHANCED PRODUCTS (Step 2 Pipeline) ====================
+
+export interface EnhancedProduct {
+  enhanced_product_id: string;
+  raw_product_id: string;  // Reference to raw_products
+  user_id: string;
+  status: EnhancedStatus;
+
+  // Original data (from raw_products)
+  original: {
+    title: string;
+    description: string;
+    images: string[];
+    price: {
+      min: number;
+      max: number;
+      currency: string;
+    };
+    source_url: string;
+  };
+
+  // AI-Enhanced content
+  enhanced: {
+    title: string;                // SEO-optimized, brand-free title
+    short_description: string;    // 2-3 sentence compelling hook
+    long_description: string;     // Full HTML description
+    features: string[];           // Bullet points of key benefits
+    images: string[];             // Processed images (Firebase Storage URLs)
+    tags: string[];               // SEO tags
+    category: string;             // Suggested category
+  };
+
+  // AI Processing metadata
+  ai_processing: {
+    text_enhanced_at?: Timestamp;
+    images_enhanced_at?: Timestamp;
+    text_model?: string;          // e.g., "gemini-pro"
+    image_model?: string;         // e.g., "vision-api"
+    processing_time_ms?: number;
+    error_message?: string;
+  };
+
+  // Pricing & profit calculations
+  pricing: {
+    suggested_price: number;
+    cost_price: number;
+    profit_margin: number;
+    compare_at_price?: number;    // For "sale" displays
+  };
+
+  created_at: Timestamp;
+  updated_at: Timestamp;
+  published_at?: Timestamp;
 }
 
 // ==================== SCRAPING TYPES ====================
