@@ -1,0 +1,68 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-dashboard:
+    name: Build Dashboard (Next.js)
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: dashboard/package-lock.json
+
+    - name: Install Dashboard Dependencies
+      working-directory: ./dashboard
+      run: npm ci
+
+    - name: Build Dashboard
+      working-directory: ./dashboard
+      run: npm run build
+
+    - name: Lint Dashboard
+      working-directory: ./dashboard
+      run: npm run lint
+
+  build-functions:
+    name: Build Functions (TypeScript)
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: functions/package-lock.json
+
+    - name: Install Functions Dependencies
+      working-directory: ./functions
+      run: npm ci
+
+    - name: Build Functions
+      working-directory: ./functions
+      run: npm run build
+
+    - name: Check for TypeScript Errors
+      working-directory: ./functions
+      run: npx tsc --noEmit

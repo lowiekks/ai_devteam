@@ -1,13 +1,39 @@
 {
-  "type": "service_account",
-  "project_id": "yaico-i-38970353-4df67",
-  "private_key_id": "abb10cf073c66e9bd1e3c587ce6aa18745a9aac2",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQD2VEILJSxj7Xaw\nghKW+9Y31IWeKgQxrsJMxAVgyJMuEzIfIGOeK2atwKcJPhTTFgYdnf78dyUBkN1i\nP6lr+eN8UXXWajAY0820GUNCxcXqHK4qJXIkUV04QcDUptvBLx6Xkv7JcxnOIqod\nI5koPQwEj8KJRgRbiCOGR6yUPS2z6MI8yb03wlQo+Zwj0BhLOP5P9SXDeXNhUE5u\n/Dw+tuf+03qGw2QW7R8dhdzMmndq0s/1dWMhqVEuL/GADg8MbDsR8cFaXcE9YFwh\nc7fAFQtt+pS8HMKaB/zrsARRFAHrXW94LaUYBWBJs130v4knIUwIIDwiDRJl6A+R\n1AdtZ+krAgMBAAECggEAHQTkGugFiL2AOV8OzZaxhTZA34HXqKVhN9CdSZTs3IVf\nvDxWlVr2PQtFzQLxSm99HPQbW/wKnK/yRLwh5hne64Bf6iNBs0sQdWJx2BCbNkSs\nB+8NZACUg3zLjhcc1cS1TT9V9hQx5WTpYYbAvkrNevlsqOYEvBEXuPQB/XIPoPKp\nnjeIVbjgV6woY0CITaoR34JDW8sT/Ra9+FOz7DzHbHM1DGkZjXD/vrsrteI6neeN\nEUDqtZKMZhXSX9CJG3fKeQjp8Xo/8Sx24NwkIWQlKsK4ZVdeVsscEeJJVB8uTxW0\nuF+eGY/xIXoF09wXlJ/Au/QmFmzH1ZSlwn4oIjXsYQKBgQD94AAj2n+/l5zK+FWG\nXViAF4ii4F9tS9za2yDohqY2+nw4/RAF6zha7HWAXQZU+FLLzGTBzMYUzWHBli/t\nrY98SpLfXKM+05MgX29dmA3fp+P80CKfu+FhfwH0vzZ8NARD5wlMquwtYuKlURaN\nyBBWMy8xdINCc6pGvBd2VE4UMwKBgQD4ZBaYX0aUSMv7Y1/WZ42z0Tt/WTHy5BaH\nyltaFle0W7lJdtcL/OQkg0lxsCwGUzc2u4Mi37BDJLdcANlY4GQTNxxKqxInUJxE\nzJf7XN9Rp3RH8XeMqGMf49ZL1kk5/0cu26W2F0M9843JqgdvC8vK2NMtHu5h2bub\nXvfgVTmfKQKBgQDDGS2CYBvkZOL9qDIxe/LTHULHyJ4NJEupdNSpXTDG92AXe4Kg\nyc8ZMLZr2xFOozcdnwmfVXqz6dHCL2TNxp+J6NVOCab6VSWvryeqSXv/8MnoMxso\nnf3qKuyZ5Yg9ksvkUtx2qrOtfVynptUqSCEl3VfbLarhmnm0uj9dlBQcuQKBgQDh\nG8Qmf2I1jOvgfiUi6GJRrrPfK/TKjc+lbMzxjgIaIG6Bl8Q4xw3z0U/ESsb7THtj\njPjBqDvT/fh21wYjN+k6SN3JBdTD8JhO+aRbV8XD+KC3eqy/uvNquU9DF4bxmtrm\nKoW5ysdT4+CB/SgTiXs98Nchs0CTSYJuwtieZF5+UQKBgHXl2IIl6O5xjeiOfukz\nBqBFoFTfAJCA2qMRUM/Z93TZJ0qg1aj0tEAbj7vVZJl77n+IPC8x6tMAR4sMEwhD\ntbelyGFMJgJXgK6JK4wnQDBiKyBWjb4ur5u0j74lonI9rmejVqpnRSaDJkT43Txm\nzSya/mjAiEJlVjLwIQnhfiZ1\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@yaico-i-38970353-4df67.iam.gserviceaccount.com",
-  "client_id": "102291884921001724227",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40yaico-i-38970353-4df67.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
+  "name": "dropship-monitor",
+  "version": "1.0.0",
+  "description": "Enterprise Dropshipping Monitor - AI-powered SaaS platform",
+  "private": true,
+  "workspaces": [
+    "dashboard",
+    "functions"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd dashboard && npm install && cd ../functions && npm install",
+    "build:dashboard": "cd dashboard && npm run build",
+    "build:functions": "cd functions && npm run build",
+    "build": "npm run build:dashboard && npm run build:functions",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "dev:functions": "cd functions && npm run serve",
+    "deploy:functions": "cd functions && npm run deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy": "firebase deploy"
+  },
+  "keywords": [
+    "dropshipping",
+    "monitoring",
+    "automation",
+    "ai",
+    "saas"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lowiekks/ai_devteam.git"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  }
 }

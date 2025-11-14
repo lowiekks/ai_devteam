@@ -1,6 +1,18 @@
-interface OutputBundle {
-  version: "v1"
-  runConfig: RunConfig;
-  metadata: Metadata;
-  outputFiles?: OutputFiles;
-}
+version: v1
+runConfig:
+  runtime: nodejs20
+  outputDirectory: .next
+  startupCommand: npm start
+metadata:
+  buildCommand: npm run build
+  framework: nextjs
+outputFiles:
+  include:
+    - .next/**
+    - public/**
+    - package.json
+    - package-lock.json
+  exclude:
+    - node_modules/**
+    - .git/**
+    - "**/*.md"
