@@ -1,6 +1,8 @@
 {
   "name": "dropship-monitor",
   "version": "1.0.0",
+  "description": "Enterprise Dropshipping Monitor - AI-powered SaaS platform",
+  "private": true,
   "description": "Enterprise Dropshipping Monitor - Full Stack Application",
   "private": true,
   "engines": {
@@ -8,17 +10,41 @@
   },
   "workspaces": [
     "dashboard",
-    "functions",
-    "admin-panel"
+    "functions"
   ],
   "scripts": {
-    "build": "npm run build:dashboard && npm run build:functions && npm run build:admin",
+    "install:all": "npm install && cd dashboard && npm install && cd ../functions && npm install",
     "build:dashboard": "cd dashboard && npm run build",
     "build:functions": "cd functions && npm run build",
-    "build:admin": "cd admin-panel && npm run build",
+    "build": "npm run build:dashboard && npm run build:functions",
     "dev:dashboard": "cd dashboard && npm run dev",
     "dev:functions": "cd functions && npm run serve",
-    "dev:admin": "cd admin-panel && npm start"
+    "deploy:functions": "cd functions && npm run deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy": "firebase deploy"
+  },
+  "keywords": [
+    "dropshipping",
+    "monitoring",
+    "automation",
+    "ai",
+    "saas"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lowiekks/ai_devteam.git"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+    "build": "npm run build:dashboard && npm run build:functions",
+    "build:dashboard": "cd dashboard && npm run build",
+    "build:functions": "cd functions && npm run build",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "dev:functions": "cd functions && npm run serve"
   },
   "overrides": {
     "undici": "5.28.4"
