@@ -8,14 +8,17 @@
   },
   "workspaces": [
     "dashboard",
-    "functions"
+    "functions",
+    "admin-panel"
   ],
   "scripts": {
-    "build": "npm run build:dashboard && npm run build:functions",
+    "build": "npm run build:dashboard && npm run build:functions && npm run build:admin",
     "build:dashboard": "cd dashboard && npm run build",
     "build:functions": "cd functions && npm run build",
+    "build:admin": "cd admin-panel && npm run build",
     "dev:dashboard": "cd dashboard && npm run dev",
-    "dev:functions": "cd functions && npm run serve"
+    "dev:functions": "cd functions && npm run serve",
+    "dev:admin": "cd admin-panel && npm start"
   },
   "overrides": {
     "undici": "5.28.4"
