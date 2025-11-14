@@ -27,6 +27,9 @@ firebase-debug.log
 firebase-debug.*.log
 firestore-debug.log
 ui-debug.log
+firebase-service-account.json
+*-firebase-adminsdk-*.json
+emulator-data/
 
 # IDE
 .vscode/
