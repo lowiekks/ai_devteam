@@ -1,0 +1,32 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2>Admin Panel</h2>
+    <p class="sidebar-subtitle">Dropship Monitor</p>
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (item of navItems; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="nav-item"
+      >
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ (authService.getUserEmail() || 'A')[0].toUpperCase() }}</div>
+      <div class="user-details">
+        <div class="user-email">{{ authService.getUserEmail() }}</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+    <button class="logout-btn" (click)="logout()">
+      <span>🚪</span> Logout
+    </button>
+  </div>
+</aside>
