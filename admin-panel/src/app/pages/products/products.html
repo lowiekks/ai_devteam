@@ -8,13 +8,27 @@
         <h1>📦 Products Monitoring</h1>
         <p>View and manage monitored products across all users</p>
       </div>
-      <div class="stats-mini">
-        <div class="stat-mini">
-          <span class="stat-value">{{ filteredProducts().length }}</span>
-          <span class="stat-label">Products</span>
+      <div class="header-actions">
+        <div class="stats-mini">
+          <div class="stat-mini">
+            <span class="stat-value">{{ filteredProducts().length }}</span>
+            <span class="stat-label">Products</span>
+          </div>
         </div>
+        <button class="btn-action btn-export" (click)="exportToCSV()">
+          📥 Export CSV
+        </button>
       </div>
     </div>
+
+    <!-- Success Message -->
+    @if (successMessage()) {
+      <div class="success-banner">
+        <span class="success-icon">✅</span>
+        <span>{{ successMessage() }}</span>
+        <button (click)="successMessage.set(null)" class="success-close">✕</button>
+      </div>
+    }
 
     <!-- Error Message -->
     @if (error()) {

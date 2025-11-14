@@ -14,8 +14,10 @@ import {
   limit,
   Timestamp,
   QueryConstraint,
+  getDocs,
+  getCountFromServer,
 } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 
 export interface User {
   id: string;
@@ -228,18 +230,57 @@ export class FirestoreService {
     this.analyticsError.set(null);
 
     try {
-      // In a real implementation, these would be aggregated queries
-      // For now, we'll return mock data that matches the structure
+      // Fetch all data concurrently for better performance
+      const [usersSnapshot, activeUsersSnapshot, productsSnapshot] = await Promise.all([
+        // Total users count
+        getCountFromServer(query(collection(this.firestore, 'users'))),
+        // Active users count
+        getCountFromServer(
+          query(collection(this.firestore, 'users'), where('status', '==', 'active'))
+        ),
+        // Total products count
+        getCountFromServer(query(collection(this.firestore, 'monitored_products'))),
+      ]);
+
+      const totalUsers = usersSnapshot.data().count;
+      const activeUsers = activeUsersSnapshot.data().count;
+      const totalProducts = productsSnapshot.data().count;
+
+      // Fetch users with stores to count active stores
+      const usersQuery = query(collection(this.firestore, 'users'));
+      const usersData = await getDocs(usersQuery);
+
+      let activeStores = 0;
+      let totalRevenue = 0;
+
+      usersData.forEach((doc) => {
+        const user = doc.data() as User;
+        if (user.shopifyUrl || user.woocommerceUrl) {
+          activeStores++;
+        }
+      });
+
+      // Estimate revenue based on products (in real app, this would come from orders/transactions)
+      // Assuming average product generates $50 revenue
+      totalRevenue = totalProducts * 50;
+
       return {
-        totalUsers: 1234,
-        activeUsers: 856,
-        totalProducts: 856,
-        totalRevenue: 45200,
-        activeStores: 423,
+        totalUsers,
+        activeUsers,
+        totalProducts,
+        totalRevenue,
+        activeStores,
       };
     } catch (error: any) {
       this.analyticsError.set(error.message || 'Failed to fetch analytics');
-      throw error;
+      // Return fallback data on error
+      return {
+        totalUsers: 0,
+        activeUsers: 0,
+        totalProducts: 0,
+        totalRevenue: 0,
+        activeStores: 0,
+      };
     } finally {
       this.analyticsLoading.set(false);
     }

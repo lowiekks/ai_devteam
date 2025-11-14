@@ -28,6 +28,9 @@ export class Products implements OnInit, OnDestroy {
   selectedProduct = signal<Product | null>(null);
   isModalOpen = signal(false);
 
+  // Success message
+  successMessage = signal<string | null>(null);
+
   private productsSubscription?: Subscription;
 
   ngOnInit() {
@@ -200,5 +203,70 @@ export class Products implements OnInit, OnDestroy {
     return text.length > maxLength
       ? text.substring(0, maxLength) + '...'
       : text;
+  }
+
+  // Export Functionality
+  exportToCSV() {
+    const products = this.filteredProducts();
+    if (products.length === 0) {
+      this.error.set('No products to export');
+      setTimeout(() => this.error.set(null), 3000);
+      return;
+    }
+
+    // CSV headers
+    const headers = [
+      'Title',
+      'Description',
+      'Status',
+      'Platform',
+      'Current Price',
+      'Previous Price',
+      'Price Change %',
+      'Supplier URL',
+      'Created At',
+      'Updated At',
+    ];
+
+    // CSV rows
+    const rows = products.map((product) => [
+      product.public_data.title,
+      product.public_data.short_description || '',
+      product.content_status,
+      product.monitored_supplier.platform,
+      product.monitored_supplier.current_price.toString(),
+      product.monitored_supplier.previous_price?.toString() || '',
+      this.getPriceChange(product)?.toFixed(2) || '',
+      product.monitored_supplier.url,
+      this.formatDate(product.created_at),
+      product.updated_at ? this.formatDate(product.updated_at) : '',
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(',')
+      ),
+    ].join('\n');
+
+    // Download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `products_export_${new Date().toISOString().split('T')[0]}.csv`
+    );
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.successMessage.set(`Exported ${products.length} products to CSV`);
+    setTimeout(() => this.successMessage.set(null), 3000);
   }
 }
