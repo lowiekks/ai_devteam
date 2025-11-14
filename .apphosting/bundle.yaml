@@ -1,0 +1,6 @@
+interface OutputBundle {
+  version: "v1"
+  runConfig: RunConfig;
+  metadata: Metadata;
+  outputFiles?: OutputFiles;
+}
