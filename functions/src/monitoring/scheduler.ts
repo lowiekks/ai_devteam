@@ -29,7 +29,7 @@ export const scheduleScrapes = functions
       config.cloudTasks.queueName
     );
 
-    console.log("Starting scheduled scrape job...");
+    functions.logger.info("Starting scheduled scrape job...");
 
     try {
       // Fetch all active products that need monitoring
@@ -38,7 +38,7 @@ export const scheduleScrapes = functions
         .where("monitored_supplier.status", "in", ["ACTIVE", "PRICE_CHANGED"])
         .get();
 
-      console.log(`Found ${productsSnapshot.size} products to monitor`);
+      functions.logger.info(`Found ${productsSnapshot.size} products to monitor`);
 
       let queuedCount = 0;
       const batchSize = 50;
@@ -88,7 +88,7 @@ export const scheduleScrapes = functions
 
             queuedCount++;
           } catch (error) {
-            console.error(`Failed to queue task for product ${product.product_id}:`, error);
+            functions.logger.error(`Failed to queue task for product ${product.product_id}`, { error });
           }
         });
 
@@ -100,7 +100,7 @@ export const scheduleScrapes = functions
         }
       }
 
-      console.log(`Successfully queued ${queuedCount} scraping tasks`);
+      functions.logger.info(`Successfully queued ${queuedCount} scraping tasks`);
 
       // Log analytics
       await db.collection("system_metrics").add({
@@ -111,7 +111,7 @@ export const scheduleScrapes = functions
 
       return { success: true, queuedTasks: queuedCount };
     } catch (error) {
-      console.error("Scheduler error:", error);
+      functions.logger.error("Scheduler error", { error });
       throw error;
     }
   });

@@ -36,11 +36,11 @@ export const refineProductText = functions
     const productId = context.params.productId;
     const data = snap.data() as Product;
 
-    console.log(`Text refinery triggered for product: ${productId}`);
+    functions.logger.info(`Text refinery triggered for product: ${productId}`);
 
     // Only process RAW_IMPORT products that haven't been text-refined
     if (data.content_status !== "RAW_IMPORT" || data.content_flags.text_refined) {
-      console.log(`Skipping text refinement - status: ${data.content_status}, text_refined: ${data.content_flags.text_refined}`);
+      functions.logger.info(`Skipping text refinement - status: ${data.content_status}, text_refined: ${data.content_flags.text_refined}`);
       return;
     }
 
@@ -49,7 +49,7 @@ export const refineProductText = functions
     const userData = userDoc.data();
 
     if (!userData?.settings?.auto_refine_text) {
-      console.log(`Auto-refine text disabled for user ${data.user_id}`);
+      functions.logger.info(`Auto-refine text disabled for user ${data.user_id}`);
       return;
     }
 
@@ -59,7 +59,7 @@ export const refineProductText = functions
       const rawDescription = data.public_data.original_description || "";
       const price = data.monitored_supplier.current_price;
 
-      console.log(`Refining text for: "${rawTitle}"`);
+      functions.logger.info(`Refining text for: "${rawTitle}"`);
 
       // Call GPT-4o to refine the content
       const refinedContent = await generateRefinedContent(rawTitle, rawDescription, price);
@@ -78,7 +78,7 @@ export const refineProductText = functions
         updated_at: FieldValue.serverTimestamp(),
       });
 
-      console.log(`Text refinement completed for product: ${productId}`);
+      functions.logger.info(`Text refinement completed for product: ${productId}`);
 
       // Log analytics
       await db.collection("analytics").add({
@@ -92,7 +92,7 @@ export const refineProductText = functions
         },
       });
     } catch (error) {
-      console.error("Text refinement error:", error);
+      functions.logger.error("Text refinement error", { error });
 
       // Mark as failed
       await snap.ref.update({
@@ -193,7 +193,7 @@ OUTPUT FORMAT (JSON only, no markdown):
 
     return refinedContent;
   } catch (error) {
-    console.error("GPT-4o refinement error:", error);
+    functions.logger.error("GPT-4o refinement error", { error });
     throw new Error(`Failed to generate refined content: ${(error as Error).message}`);
   }
 }
@@ -249,7 +249,7 @@ export const triggerTextRefinement = functions.https.onCall(async (data, context
       refinedContent,
     };
   } catch (error) {
-    console.error("Manual text refinement error:", error);
+    functions.logger.error("Manual text refinement error", { error });
     throw new functions.https.HttpsError("internal", "Failed to refine text");
   }
 });

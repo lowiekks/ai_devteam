@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { auth, functions } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
-import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { onAuthStateChanged, signInAnonymously, User } from 'firebase/auth';
 import DashboardTable from '@/components/DashboardTable';
 import StatsCards from '@/components/StatsCards';
 import { Product } from '@/types/product';
 
 export default function HomePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,8 +31,8 @@ export default function HomePage() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const getMonitoredProducts = httpsCallable(functions, 'getMonitoredProducts');
-      const result: any = await getMonitoredProducts();
+      const getMonitoredProducts = httpsCallable<void, { success: boolean; products: Product[] }>(functions, 'getMonitoredProducts');
+      const result = await getMonitoredProducts();
 
       if (result.data.success) {
         setProducts(result.data.products);
