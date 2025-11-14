@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Enterprise Dropshipping Monitor - AI-powered SaaS platform",
   "private": true,
+  "description": "Enterprise Dropshipping Monitor - Full Stack Application",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "workspaces": [
     "dashboard",
     "functions"
@@ -35,5 +40,13 @@
   },
   "devDependencies": {
     "firebase-tools": "^13.0.0"
+    "build": "npm run build:dashboard && npm run build:functions",
+    "build:dashboard": "cd dashboard && npm run build",
+    "build:functions": "cd functions && npm run build",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "dev:functions": "cd functions && npm run serve"
+  },
+  "overrides": {
+    "undici": "5.28.4"
   }
 }

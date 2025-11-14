@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { auth, functions, firestore } from '@/lib/firebase';
 import { httpsCallable } from 'firebase/functions';
-import { doc, updateDoc, collection, query, where, getDocs, Timestamp } from 'firestore';
+import { doc, updateDoc, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ProductReviewCard } from '@/components/ProductReviewCard';
 import { ReviewStats } from '@/components/ReviewStats';
