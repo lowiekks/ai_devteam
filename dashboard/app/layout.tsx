@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { ToastProvider } from '@/components/ui/toast'
+import { Navigation } from '@/components/Navigation'
 
 // Use system fonts as fallback for offline builds
 const fontClass = 'font-sans'
@@ -16,7 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={fontClass}>{children}</body>
+      <body className={inter.className}>
+        <ToastProvider>
+          <Navigation>{children}</Navigation>
+        </ToastProvider>
+      </body>
     </html>
   )
 }
