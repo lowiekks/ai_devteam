@@ -116,7 +116,7 @@ export function ProductReviewCard({ product, onApprove, onReject, onEdit }: Prod
           {!showOriginal && (
             <div className="mb-6">
               <p className="text-gray-300 text-lg italic leading-relaxed">
-                "{product.public_data.short_description}"
+                &quot;{product.public_data.short_description}&quot;
               </p>
             </div>
           )}

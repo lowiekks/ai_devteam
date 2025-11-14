@@ -62,11 +62,11 @@ export default function ForgotPasswordPage() {
                 <Mail className="w-8 h-8 text-green-400" />
               </div>
               <p className="text-gray-300">
-                We've sent password reset instructions to{' '}
+                We&apos;ve sent password reset instructions to{' '}
                 <span className="font-semibold text-white">{email}</span>
               </p>
               <p className="text-sm text-gray-400">
-                Didn't receive the email? Check your spam folder or try again.
+                Didn&apos;t receive the email? Check your spam folder or try again.
               </p>
               <Button
                 variant="outline"

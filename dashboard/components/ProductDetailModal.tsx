@@ -45,6 +45,8 @@ interface ProductDetailModalProps {
 }
 
 export function ProductDetailModal({ product, isOpen, onClose }: ProductDetailModalProps) {
+  const [selectedImage, setSelectedImage] = React.useState(0);
+
   if (!product) return null;
 
   const priceChange =
@@ -55,7 +57,6 @@ export function ProductDetailModal({ product, isOpen, onClose }: ProductDetailMo
         100
       : null;
 
-  const [selectedImage, setSelectedImage] = React.useState(0);
   const images = product.public_data.images || [];
 
   return (
